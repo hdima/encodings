@@ -1,9 +1,11 @@
 all: compile
 
-compile: $(patsubst src/%.erl,ebin/%.beam,$(wildcard src/*.erl))
+# encodings must be first
+compile: ebin/encodings.beam \
+	$(patsubst src/%.erl,ebin/%.beam,$(wildcard src/*.erl))
 
 ebin/%.beam: src/%.erl
-	erlc -Wall -o ebin/ $<
+	erlc -Wall -pa ebin -o ebin/ $<
 
 test: compile
 	./test
