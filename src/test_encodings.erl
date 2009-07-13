@@ -15,7 +15,7 @@ test_encoding(Encoding, Filename) ->
 
 
 read_records(Filename) ->
-    Path = filename:join(filename:dirname(?FILE), Filename),
+    Path = filename:join([filename:dirname(?FILE), "tests", Filename]),
     {ok, F} = file:open(Path, [read, raw]),
     read_records(F, "", "", "").
 
