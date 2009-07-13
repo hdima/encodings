@@ -1,3 +1,6 @@
+%%
+%% @doc CP1251 encoding
+%%
 -module(cp1251).
 
 -behaviour(encodings).
@@ -5,10 +8,16 @@
 -export([aliases/0, encode/1, decode/1]).
 
 
+%%
+%% @doc Return encoding aliases
+%%
 aliases() ->
     [cp1251, windows1251, "cp1251", "windows1251"].
 
 
+%%
+%% @doc Encode Unicode to Windows-1251 string
+%%
 encode(Unicode) ->
     encode(Unicode, "").
 
@@ -18,6 +27,9 @@ encode([C | Tail], Result) ->
     encode(Tail, [encode_char(C) | Result]).
 
 
+%%
+%% @doc Decode Windows-1251 string to Unicode
+%%
 decode(String) ->
     decode(String, "").
 
@@ -27,6 +39,9 @@ decode([C | Tail], Result) ->
     decode(Tail, [decode_char(C) | Result]).
 
 
+%%
+%% @doc Encode Unicode character to Windows-1251
+%%
 encode_char(C) when C < 16#80 -> C;
 encode_char(C) when C >= 16#0410, C =< 16#044f -> C - 16#350;
 encode_char(16#0402) -> 16#80;
@@ -96,6 +111,9 @@ encode_char(16#0457) -> 16#bf;
 encode_char(C) -> erlang:error(badarg, [C]).
 
 
+%%
+%% @doc Decode Windows-1251 character to Unicode
+%%
 decode_char(C) when C < 16#80 -> C;
 decode_char(C) when C >= 16#c0, C =< 16#ff -> C + 16#350;
 decode_char(16#80) -> 16#0402;
