@@ -82,10 +82,10 @@ handle_info(_Info, State) ->
 
 
 handle_call({encode, Unicode, Encoding}, _From, State) ->
-    [{_Encoding, Module}] = ets:lookup(?MODULE, Encoding),
+    Module = ets:lookup_element(?MODULE, Encoding, 2),
     {reply, Module:encode(Unicode), State};
 handle_call({decode, String, Encoding}, _From, State) ->
-    [{_Encoding, Module}] = ets:lookup(?MODULE, Encoding),
+    Module = ets:lookup_element(?MODULE, Encoding, 2),
     {reply, Module:decode(String), State};
 handle_call({register, Encoding, Module}, _From, State) ->
     ets:insert(?MODULE, {Encoding, Module}),
