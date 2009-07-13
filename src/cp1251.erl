@@ -1,6 +1,11 @@
 -module(cp1251).
--export([encode/1, decode/1]).
+-export([register/0, encode/1, decode/1]).
 
+
+register() ->
+    Encoder = fun encode/1,
+    Decoder = fun decode/1,
+    encodings:register(cp1251, Encoder, Decoder).
 
 encode(Unicode) ->
     encode(Unicode, "").

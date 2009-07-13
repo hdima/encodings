@@ -3,7 +3,9 @@
 
 
 test_encodings() ->
+    encodings:start_link(),
     ok = test_encoding(cp1251, "CP1251.TXT"),
+    encodings:stop(),
     ok.
 
 
