@@ -4,13 +4,16 @@
 
 test_encodings() ->
     encodings:start_link(),
-    ok = test_encoding(cp1251, "CP1251.TXT"),
+    CP1251 = read_records("CP1251.TXT"),
+    ok = test_encoding(cp1251, CP1251),
+    ok = test_encoding(windows1251, CP1251),
+    ok = test_encoding("cp1251", CP1251),
+    ok = test_encoding("windows1251", CP1251),
     encodings:stop(),
     ok.
 
 
-test_encoding(Encoding, Filename) ->
-    {String, Unicode} = read_records(Filename),
+test_encoding(Encoding, {String, Unicode}) ->
     String = encodings:encode(Unicode, Encoding),
     Unicode = encodings:decode(String, Encoding),
     ok.
