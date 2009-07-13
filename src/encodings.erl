@@ -2,7 +2,7 @@
 %% @doc Encodings
 %%
 -module(encodings).
--export([encode/2, decode/2, register/2, start_link/0, stop/0]).
+-export([encode/2, decode/2, register_encoding/2, start_link/0, stop/0]).
 
 -export([behaviour_info/1]).
 
@@ -12,7 +12,7 @@
 
 
 behaviour_info(callbacks) ->
-    [{register, 0}, {encode, 1}, {decode, 1}];
+    [{aliases, 0}, {encode, 1}, {decode, 1}];
 behaviour_info(_Other) ->
     undefined.
 
@@ -32,8 +32,8 @@ decode(String, Encoding) ->
 %%
 %% @doc Register encoder and decoder for encoding
 %%
-register(Encoding, Module) ->
-    gen_server:call(?MODULE, {register, Encoding, Module}).
+register_encoding(Encoding, Module) ->
+    gen_server:call(?MODULE, {register_encoding, Encoding, Module}).
 
 
 %%
@@ -41,8 +41,26 @@ register(Encoding, Module) ->
 %%
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []),
-    % FIXME: Need to be more flexible
-    cp1251:register().
+    register_modules([cp1251]).
+
+
+%%
+%% @doc Register modules
+%%
+register_modules([]) ->
+    ok;
+register_modules([Module | Modules]) ->
+    register_module(Module, Module:aliases()),
+    register_modules(Modules).
+
+%%
+%% @doc Register module
+%%
+register_module(_Module, []) ->
+    ok;
+register_module(Module, [Encoding | Encodings]) ->
+    register_encoding(Encoding, Module),
+    register_module(Module, Encodings).
 
 
 %%
@@ -87,6 +105,6 @@ handle_call({encode, Unicode, Encoding}, _From, State) ->
 handle_call({decode, String, Encoding}, _From, State) ->
     Module = ets:lookup_element(?MODULE, Encoding, 2),
     {reply, Module:decode(String), State};
-handle_call({register, Encoding, Module}, _From, State) ->
+handle_call({register_encoding, Encoding, Module}, _From, State) ->
     ets:insert(?MODULE, {Encoding, Module}),
     {reply, ok, State}.
