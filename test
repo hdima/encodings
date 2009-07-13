@@ -1,0 +1,3 @@
+#! /bin/sh
+
+erl -noshell -pa ebin -s test_encodings test -s init stop
