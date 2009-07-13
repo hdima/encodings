@@ -1,11 +1,13 @@
 -module(cp1251).
 
 -behaviour(encodings).
+
 -export([aliases/0, encode/1, decode/1]).
 
 
 aliases() ->
     [cp1251, windows1251, "cp1251", "windows1251"].
+
 
 encode(Unicode) ->
     encode(Unicode, "").

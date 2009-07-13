@@ -6,6 +6,7 @@ test_encodings() ->
     encodings:start_link(),
     ok = test_encoding([cp1251, windows1251, "cp1251", "windows1251"],
         read_records("cp1251.txt")),
+    ok = test_encoding([ascii, "ascii"], read_records("ascii.txt")),
     encodings:stop(),
     ok.
 
