@@ -37,6 +37,8 @@ test_encoding([Encoding | Encodings], {String, Unicode}=Info) ->
     Unicode = encodings:decode(String, Encoding),
     BadString = [hd(String) + 1],
     {error, [], BadString} = (catch encodings:decode(BadString, Encoding)),
+    {error, [], [-1]} = (catch encodings:encode([-1], Encoding)),
+    {error, [], [-1]} = (catch encodings:decode([-1], Encoding)),
     test_encoding(Encodings, Info).
 
 

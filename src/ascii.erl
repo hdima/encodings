@@ -66,12 +66,12 @@ decode([C | Tail]=Input, Result) ->
 %%
 %% @doc Encode Unicode character to ASCII
 %%
-encode_char(C) when C =< 16#7f -> C;
+encode_char(C) when C >= 0, C =< 16#7f -> C;
 encode_char(_) -> badarg.
 
 
 %%
 %% @doc Decode ASCII character to Unicode
 %%
-decode_char(C) when C =< 16#7f -> C;
+decode_char(C) when C >= 0, C =< 16#7f -> C;
 decode_char(_) -> badarg.

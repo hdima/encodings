@@ -66,12 +66,12 @@ decode([C | Tail]=Input, Result) ->
 %%
 %% @doc Encode Unicode character to ISO 8859-1
 %%
-encode_char(C) when C =< 16#ff -> C;
+encode_char(C) when C >= 0, C =< 16#ff -> C;
 encode_char(_) -> badarg.
 
 
 %%
 %% @doc Decode ISO 8859-1 character to Unicode
 %%
-decode_char(C) when C =< 16#ff -> C;
+decode_char(C) when C >= 0, C =< 16#ff -> C;
 decode_char(_) -> badarg.
