@@ -20,6 +20,8 @@
 
 
 test_encodings() ->
+    % Disable error logging to the tty
+    error_logger:tty(false),
     encodings:start_link(),
     ok = test_encoding([ascii, "ascii"], read_records("ascii.txt")),
     ok = test_encoding([iso8859_1, "iso88591", latin1, "latin1"],
