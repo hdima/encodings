@@ -37,8 +37,13 @@ encode(Unicode) ->
 
 encode("", Result) ->
     lists:reverse(Result);
-encode([C | Tail], Result) ->
-    encode(Tail, [encode_char(C) | Result]).
+encode([C | Tail]=Input, Result) ->
+    case encode_char(C) of
+        badarg ->
+            {error, Result, Input};
+        E ->
+            encode(Tail, [E | Result])
+    end.
 
 
 %%
@@ -49,15 +54,19 @@ decode(String) ->
 
 decode("", Result) ->
     lists:reverse(Result);
-decode([C | Tail], Result) ->
-    decode(Tail, [decode_char(C) | Result]).
+decode([C | Tail]=Input, Result) ->
+    case decode_char(C) of
+        badarg ->
+            {error, Result, Input};
+        E ->
+            decode(Tail, [E | Result])
+    end.
 
 
 %%
 %% @doc Encode Unicode character to Windows-1251
 %%
 encode_char(C) when C < 16#80 -> C;
-encode_char(C) when C >= 16#0410, C =< 16#044f -> C - 16#350;
 encode_char(16#0402) -> 16#80;
 encode_char(16#0403) -> 16#81;
 encode_char(16#201a) -> 16#82;
@@ -122,14 +131,14 @@ encode_char(16#0458) -> 16#bc;
 encode_char(16#0405) -> 16#bd;
 encode_char(16#0455) -> 16#be;
 encode_char(16#0457) -> 16#bf;
-encode_char(C) -> erlang:error(badarg, [C]).
+encode_char(C) when C >= 16#0410, C =< 16#044f -> C - 16#350;
+encode_char(_) -> badarg.
 
 
 %%
 %% @doc Decode Windows-1251 character to Unicode
 %%
 decode_char(C) when C < 16#80 -> C;
-decode_char(C) when C >= 16#c0, C =< 16#ff -> C + 16#350;
 decode_char(16#80) -> 16#0402;
 decode_char(16#81) -> 16#0403;
 decode_char(16#82) -> 16#201a;
@@ -194,4 +203,5 @@ decode_char(16#bc) -> 16#0458;
 decode_char(16#bd) -> 16#0405;
 decode_char(16#be) -> 16#0455;
 decode_char(16#bf) -> 16#0457;
-decode_char(C) -> erlang:error(badarg, [C]).
+decode_char(C) when C >= 16#c0, C =< 16#ff -> C + 16#350;
+decode_char(_) -> badarg.

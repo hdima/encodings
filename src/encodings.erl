@@ -16,7 +16,8 @@
 %% @doc Encodings
 %%
 -module(encodings).
--export([encode/2, decode/2, register_encoding/2, start_link/0, stop/0]).
+-export([encode/2, decode/2, register_encoding/2, start/0, start_link/0,
+    stop/0]).
 
 -export([behaviour_info/1]).
 
@@ -53,10 +54,20 @@ register_encoding(Encoding, Module) ->
 %%
 %% @doc Start encoder process
 %%
+start() ->
+    gen_server:start({local, ?MODULE}, ?MODULE, [], []),
+    register_modules().
+
+%%
+%% @doc Start encoder process
+%%
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []),
-    register_modules([ascii, iso8859_1, cp1251]).
+    register_modules().
 
+
+register_modules() ->
+    register_modules([ascii, iso8859_1, cp1251]).
 
 %%
 %% @doc Register modules

@@ -37,8 +37,13 @@ encode(Unicode) ->
 
 encode("", Result) ->
     lists:reverse(Result);
-encode([C | Tail], Result) ->
-    encode(Tail, [encode_char(C) | Result]).
+encode([C | Tail]=Input, Result) ->
+    case encode_char(C) of
+        badarg ->
+            {error, Result, Input};
+        E ->
+            encode(Tail, [E | Result])
+    end.
 
 
 %%
@@ -49,19 +54,24 @@ decode(String) ->
 
 decode("", Result) ->
     lists:reverse(Result);
-decode([C | Tail], Result) ->
-    decode(Tail, [decode_char(C) | Result]).
+decode([C | Tail]=Input, Result) ->
+    case decode_char(C) of
+        badarg ->
+            {error, Result, Input};
+        D ->
+            decode(Tail, [D | Result])
+    end.
 
 
 %%
 %% @doc Encode Unicode character to ASCII
 %%
 encode_char(C) when C =< 16#7f -> C;
-encode_char(C) -> erlang:error(badarg, [C]).
+encode_char(_) -> badarg.
 
 
 %%
 %% @doc Decode ASCII character to Unicode
 %%
 decode_char(C) when C =< 16#7f -> C;
-decode_char(C) -> erlang:error(badarg, [C]).
+decode_char(_) -> badarg.

@@ -20,9 +20,7 @@
 
 
 test_encodings() ->
-    % Disable error logging to the tty
-    error_logger:tty(false),
-    encodings:start_link(),
+    encodings:start(),
     ok = test_encoding([ascii, "ascii"], read_records("ascii.txt")),
     ok = test_encoding([iso8859_1, "iso88591", latin1, "latin1"],
         read_records("iso8859-1.txt")),
@@ -37,8 +35,8 @@ test_encoding([], _Info) ->
 test_encoding([Encoding | Encodings], {String, Unicode}=Info) ->
     String = encodings:encode(Unicode, Encoding),
     Unicode = encodings:decode(String, Encoding),
-    {'EXIT', _} = (catch encodings:decode(hd(String) + 1, Encoding)),
-    encodings:start_link(),
+    BadString = [hd(String) + 1],
+    {error, [], BadString} = (catch encodings:decode(BadString, Encoding)),
     test_encoding(Encodings, Info).
 
 
