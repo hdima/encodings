@@ -55,7 +55,7 @@ register_encoding(Encoding, Module) ->
 %%
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []),
-    register_modules([cp1251, ascii]).
+    register_modules([ascii, iso8859_1, cp1251]).
 
 
 %%

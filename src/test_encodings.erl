@@ -21,9 +21,11 @@
 
 test_encodings() ->
     encodings:start_link(),
+    ok = test_encoding([ascii, "ascii"], read_records("ascii.txt")),
+    ok = test_encoding([iso8859_1, "iso88591", latin1, "latin1"],
+        read_records("iso8859-1.txt")),
     ok = test_encoding([cp1251, windows1251, "cp1251", "windows1251"],
         read_records("cp1251.txt")),
-    ok = test_encoding([ascii, "ascii"], read_records("ascii.txt")),
     encodings:stop(),
     ok.
 
@@ -33,6 +35,8 @@ test_encoding([], _Info) ->
 test_encoding([Encoding | Encodings], {String, Unicode}=Info) ->
     String = encodings:encode(Unicode, Encoding),
     Unicode = encodings:decode(String, Encoding),
+    {'EXIT', _} = (catch encodings:decode(hd(String) + 1, Encoding)),
+    encodings:start_link(),
     test_encoding(Encodings, Info).
 
 

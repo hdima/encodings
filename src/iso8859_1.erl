@@ -13,9 +13,9 @@
 %% You should have received a copy of the GNU General Public License
 %% along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %%
-%% @doc ASCII encoding
+%% @doc ISO 8859-1 encoding
 %%
--module(ascii).
+-module(iso8859_1).
 
 -behaviour(encodings).
 
@@ -26,11 +26,11 @@
 %% @doc Return encoding aliases
 %%
 aliases() ->
-    [ascii, "ascii"].
+    [iso8859_1, "iso88591", latin1, "latin1"].
 
 
 %%
-%% @doc Encode Unicode to ASCII string
+%% @doc Encode Unicode to ISO 8859-1 string
 %%
 encode(Unicode) ->
     encode(Unicode, "").
@@ -42,7 +42,7 @@ encode([C | Tail], Result) ->
 
 
 %%
-%% @doc Decode ASCII string to Unicode
+%% @doc Decode ISO 8859-1 string to Unicode
 %%
 decode(String) ->
     decode(String, "").
@@ -54,14 +54,14 @@ decode([C | Tail], Result) ->
 
 
 %%
-%% @doc Encode Unicode character to ASCII
+%% @doc Encode Unicode character to ISO 8859-1
 %%
-encode_char(C) when C =< 16#7f -> C;
+encode_char(C) when C =< 16#ff -> C;
 encode_char(C) -> erlang:error(badarg, [C]).
 
 
 %%
-%% @doc Decode ASCII character to Unicode
+%% @doc Decode ISO 8859-1 character to Unicode
 %%
-decode_char(C) when C =< 16#7f -> C;
+decode_char(C) when C =< 16#ff -> C;
 decode_char(C) -> erlang:error(badarg, [C]).
