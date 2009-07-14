@@ -66,7 +66,7 @@ decode([C | Tail]=Input, Result) ->
 %%
 %% @doc Encode Unicode character to Windows-1251
 %%
-encode_char(C) when C >= 0, C < 16#80 -> C;
+encode_char(C) when C >= 0, C =< 16#7f -> C;
 encode_char(16#0402) -> 16#80;
 encode_char(16#0403) -> 16#81;
 encode_char(16#201a) -> 16#82;
@@ -138,7 +138,7 @@ encode_char(_) -> badarg.
 %%
 %% @doc Decode Windows-1251 character to Unicode
 %%
-decode_char(C) when C >= 0, C < 16#80 -> C;
+decode_char(C) when C >= 0, C =< 16#7f -> C;
 decode_char(16#80) -> 16#0402;
 decode_char(16#81) -> 16#0403;
 decode_char(16#82) -> 16#201a;
