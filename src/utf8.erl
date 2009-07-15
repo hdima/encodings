@@ -40,11 +40,13 @@ encode("", Result) ->
 encode([C | Tail], Result) when C >= 0, C =< 16#7f ->
     encode(Tail, [C | Result]);
 encode([C | Tail], Result) when C >= 16#80, C =< 16#7ff ->
-    todo;
+    encode(Tail, [C band 16#bf, C bsr 6 band 16#df | Result]);
 encode([C | Tail], Result) when C >= 16#800, C =< 16#ffff ->
-    todo;
+    encode(Tail, [C band 16#bf, C bsr 6 band 16#bf, C bsr 12 band 16#ef
+        | Result]);
 encode([C | Tail], Result) when C >= 16#10000, C =< 16#10ffff ->
-    todo;
+    encode(Tail, [C band 16#bf, C bsr 6 band 16#bf, C bsr 12 band 16#bf,
+        C bsr 18 band 16#f7 | Result]);
 encode(Input, Result) ->
     {error, Result, Input}.
 
