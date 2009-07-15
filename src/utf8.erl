@@ -63,11 +63,31 @@ decode([C1, C2 | Tail], Rsult)
         when C1 >= 16#c2, C1 =< 16#df, C2 >= 16#80, C2 =< 16#bf ->
     todo;
 decode([C1, C2, C3 | Tail], Rsult)
-        when C1 >= 16#e0, C1 =< 16#ef, C2 >= 16#80, C2 =< 16#bf,
+        when C1 =:= 16#e0, C2 >= 16#a0, C2 =< 16#bf,
+        C3 >= 16#80, C3 =< 16#bf ->
+    todo;
+decode([C1, C2, C3 | Tail], Rsult)
+        when C1 =:= 16#ed, C2 >= 16#80, C2 =< 16#9f,
+        C3 >= 16#80, C3 =< 16#bf ->
+    todo;
+decode([C1, C2, C3 | Tail], Rsult)
+        when C1 >= 16#e1, C1 =< 16#ec, C2 >= 16#80, C2 =< 16#bf,
+        C3 >= 16#80, C3 =< 16#bf ->
+    todo;
+decode([C1, C2, C3 | Tail], Rsult)
+        when C1 >= 16#ee, C1 =< 16#ef, C2 >= 16#80, C2 =< 16#bf,
         C3 >= 16#80, C3 =< 16#bf ->
     todo;
 decode([C1, C2, C3, C4 | Tail], Rsult)
-        when C1 >= 16#f0, C1 =< 16#f4, C2 >= 16#80, C2 =< 16#bf,
+        when C1 =:= 16#f4, C2 >= 16#80, C2 =< 16#8f,
+        C3 >= 16#80, C3 =< 16#bf, C4 >= 16#80, C4 =< 16#bf ->
+    todo;
+decode([C1, C2, C3, C4 | Tail], Rsult)
+        when C1 =:= 16#f0, C2 >= 16#90, C2 =< 16#bf,
+        C3 >= 16#80, C3 =< 16#bf, C4 >= 16#80, C4 =< 16#bf ->
+    todo;
+decode([C1, C2, C3, C4 | Tail], Rsult)
+        when C1 >= 16#f1, C1 =< 16#f3, C2 >= 16#80, C2 =< 16#bf,
         C3 >= 16#80, C3 =< 16#bf, C4 >= 16#80, C4 =< 16#bf ->
     todo;
 decode(Input, Result) ->
