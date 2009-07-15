@@ -67,7 +67,7 @@ start_link() ->
 
 
 register_modules() ->
-    register_modules([ascii, iso8859_1, cp1251]).
+    register_modules([ascii, utf8, iso8859_1, cp1251]).
 
 %%
 %% @doc Register modules

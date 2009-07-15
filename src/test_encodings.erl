@@ -19,6 +19,36 @@
 -export([test/0, doc/0]).
 
 
+test_utf8() ->
+    ok = test_encoding([utf8, "utf8"], generate_utf8()),
+    ok.
+
+
+generate_utf8() ->
+    {generate_utf8("", 16#10ffff), generate_unicode("", 16#10ffff)}.
+
+
+generate_utf8(Result, -1) ->
+    Result;
+generate_utf8(Result, N) when N >= 16#0, N =< 16#7f->
+    generate_utf8([N | Result], N - 1);
+generate_utf8(Result, N) when N >= 16#80, N =< 16#7ff->
+    % TODO
+    generate_utf8([N, N | Result], N - 1);
+generate_utf8(Result, N) when N >= 16#800, N =< 16#ffff->
+    % TODO
+    generate_utf8([N, N, N | Result], N - 1);
+generate_utf8(Result, N) when N >= 16#10000, N =< 16#10ffff->
+    % TODO
+    generate_utf8([N, N, N, N | Result], N - 1).
+
+
+generate_unicode(Result, -1) ->
+    Result;
+generate_unicode(Result, N) ->
+    generate_unicode([N | Result], N - 1).
+
+
 test_encodings() ->
     encodings:start(),
     ok = test_encoding([ascii, "ascii"], read_records("ascii.txt")),
@@ -63,6 +93,7 @@ read_records(F, Buffer, String, Unicode) ->
 
 
 test() ->
+    % test_utf8(),
     test_encodings().
 
 
