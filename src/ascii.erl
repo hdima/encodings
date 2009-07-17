@@ -51,7 +51,7 @@ decode(String) ->
 
 decode(<<>>, Result) ->
     lists:reverse(Result);
-decode(<<C,Tail/binary>>, Result) when C >= 0, C =< 16#7f ->
+decode(<<C,Tail/binary>>, Result) when C =< 16#7f ->
     decode(Tail, [C | Result]);
 decode(Input, Result) ->
     {error, Result, Input}.

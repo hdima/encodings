@@ -33,17 +33,14 @@ aliases() ->
 %% @doc Encode Unicode to ISO 8859-1 string
 %%
 encode(Unicode) ->
-    encode(Unicode, "").
+    encode(Unicode, <<>>).
 
 encode("", Result) ->
-    lists:reverse(Result);
-encode([C | Tail]=Input, Result) ->
-    case encode_char(C) of
-        badarg ->
-            {error, Result, Input};
-        E ->
-            encode(Tail, [E | Result])
-    end.
+    Result;
+encode([C | Tail], Result) when C >= 0, C =< 16#ff ->
+    encode(Tail, <<Result/binary,C>>);
+encode(Input, Result) ->
+    {error, Result, Input}.
 
 
 %%
@@ -52,26 +49,7 @@ encode([C | Tail]=Input, Result) ->
 decode(String) ->
     decode(String, "").
 
-decode("", Result) ->
+decode(<<>>, Result) ->
     lists:reverse(Result);
-decode([C | Tail]=Input, Result) ->
-    case decode_char(C) of
-        badarg ->
-            {error, Result, Input};
-        D ->
-            decode(Tail, [D | Result])
-    end.
-
-
-%%
-%% @doc Encode Unicode character to ISO 8859-1
-%%
-encode_char(C) when C >= 0, C =< 16#ff -> C;
-encode_char(_) -> badarg.
-
-
-%%
-%% @doc Decode ISO 8859-1 character to Unicode
-%%
-decode_char(C) when C >= 0, C =< 16#ff -> C;
-decode_char(_) -> badarg.
+decode(<<C,Tail/binary>>, Result) ->
+    decode(Tail, [C | Result]).
