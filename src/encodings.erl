@@ -33,13 +33,13 @@ behaviour_info(_Other) ->
 
 
 %%
-%% @doc Encode Unicode to string with Encoding
+%% @doc Encode Unicode to binary string with Encoding
 %%
 encode(Unicode, Encoding) ->
     gen_server:call(?MODULE, {encode, Unicode, Encoding}).
 
 %%
-%% @doc Decode String to Unicode with Encoding
+%% @doc Decode binary String to Unicode with Encoding
 %%
 decode(String, Encoding) ->
     gen_server:call(?MODULE, {decode, String, Encoding}).
