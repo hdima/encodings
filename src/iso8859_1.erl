@@ -47,9 +47,4 @@ encode(Input, Result) ->
 %% @doc Decode ISO 8859-1 string to Unicode
 %%
 decode(String) ->
-    decode(String, "").
-
-decode(<<>>, Result) ->
-    lists:reverse(Result);
-decode(<<C,Tail/binary>>, Result) ->
-    decode(Tail, [C | Result]).
+    binary_to_list(String).
