@@ -54,4 +54,4 @@ decode(<<>>, Result) ->
 decode(<<C,Tail/binary>>, Result) when C =< 16#7f ->
     decode(Tail, [C | Result]);
 decode(Input, Result) ->
-    {error, Result, Input}.
+    {error, lists:reverse(Result), Input}.
