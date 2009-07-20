@@ -1,3 +1,4 @@
+- Add interface to get encoder/decoder for a selected charset
 - Alias normalization
 - Fix CP1251
 - Fix tests
