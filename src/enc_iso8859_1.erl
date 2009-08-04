@@ -15,7 +15,7 @@
 %%
 %% @doc ISO 8859-1 encoding
 %%
--module(iso8859_1).
+-module(enc_iso8859_1).
 
 -behaviour(encodings).
 

@@ -15,7 +15,7 @@
 %%
 %% @doc ASCII encoding
 %%
--module(ascii).
+-module(enc_ascii).
 
 -behaviour(encodings).
 
