@@ -19,41 +19,11 @@
 -export([test/0, doc/0]).
 
 
-test_utf8() ->
-    ok = test_encoding([utf8, "utf8"], generate_utf8()),
-    ok.
-
-
-generate_utf8() ->
-    {generate_utf8("", 16#10ffff), generate_unicode("", 16#10ffff)}.
-
-
-generate_utf8(Result, -1) ->
-    Result;
-generate_utf8(Result, N) when N >= 16#0, N =< 16#7f->
-    generate_utf8([N | Result], N - 1);
-generate_utf8(Result, N) when N >= 16#80, N =< 16#7ff->
-    % TODO
-    generate_utf8([N, N | Result], N - 1);
-generate_utf8(Result, N) when N >= 16#800, N =< 16#ffff->
-    % TODO
-    generate_utf8([N, N, N | Result], N - 1);
-generate_utf8(Result, N) when N >= 16#10000, N =< 16#10ffff->
-    % TODO
-    generate_utf8([N, N, N, N | Result], N - 1).
-
-
-generate_unicode(Result, -1) ->
-    Result;
-generate_unicode(Result, N) ->
-    generate_unicode([N | Result], N - 1).
-
-
 test_encodings() ->
     encodings:start(),
-    ok = test_encoding([ascii, "ascii"], read_records("ascii.txt")),
-    ok = test_encoding([iso8859_1, "iso88591", latin1, "latin1"],
-        read_records("iso8859-1.txt")),
+    ok = test_encoding([ascii, "ascii"], read_tests("ascii.txt")),
+    %ok = test_encoding([iso8859_1, "iso88591", latin1, "latin1"],
+    %    read_records("iso8859-1.txt")),
     %ok = test_encoding([cp1251, windows1251, "cp1251", "windows1251"],
     %    read_records("cp1251.txt")),
     encodings:stop(),
@@ -62,8 +32,7 @@ test_encodings() ->
 
 test_encoding([], _Info) ->
     ok;
-test_encoding([Encoding | Encodings], {String, Unicode}=Info) ->
-    Bytes = list_to_binary(String),
+test_encoding([Encoding | Encodings], {Bytes, Unicode}=Info) ->
     {Encoder, Decoder} = encodings:get_encoder_decoder(Encoding),
     Bytes = encodings:encode(Unicode, Encoding),
     Bytes = Encoder(Unicode),
@@ -73,24 +42,16 @@ test_encoding([Encoding | Encodings], {String, Unicode}=Info) ->
     test_encoding(Encodings, Info).
 
 
-read_records(Filename) ->
+read_tests(Filename) ->
     Path = filename:join([filename:dirname(?FILE), "tests", Filename]),
-    {ok, F} = file:open(Path, [read, raw]),
-    read_records(F, "", "", "").
+    {ok, Terms} = file:consult(Path),
+    read_tests(Terms, <<>>, []).
 
-
-read_records(F, [$0, $x, S1, S2, $\t, $0, $x, U1, U2, U3, U4, $\n | Tail],
-        String, Unicode) ->
-    read_records(F, Tail, [erlang:list_to_integer([S1, S2], 16) | String],
-        [erlang:list_to_integer([U1, U2, U3, U4], 16) | Unicode]);
-read_records(F, Buffer, String, Unicode) ->
-    case file:read(F, 1024) of
-        eof ->
-            file:close(F),
-            {String, Unicode};
-        {ok, Data} ->
-            read_records(F, Buffer ++ Data, String, Unicode)
-    end.
+%% TODO: Add tests for bad cases
+read_tests([], String, Unicode) ->
+    {String, lists:reverse(Unicode)};
+read_tests([{Bytes, Char} | Tail], String, Unicode) ->
+    read_tests(Tail, <<String/binary,Bytes/binary>>, [Char | Unicode]).
 
 
 test() ->
