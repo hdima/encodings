@@ -64,8 +64,11 @@ test_encoding([], _Info) ->
     ok;
 test_encoding([Encoding | Encodings], {String, Unicode}=Info) ->
     Bytes = list_to_binary(String),
+    {Encoder, Decoder} = encodings:get_encoder_decoder(Encoding),
     Bytes = encodings:encode(Unicode, Encoding),
+    Bytes = Encoder(Unicode),
     Unicode = encodings:decode(Bytes, Encoding),
+    Unicode = Decoder(Bytes),
     {error, <<>>, [-1]} = encodings:encode([-1], Encoding),
     test_encoding(Encodings, Info).
 

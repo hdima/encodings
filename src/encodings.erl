@@ -16,8 +16,8 @@
 %% @doc Encodings
 %%
 -module(encodings).
--export([encode/2, decode/2, register_encoding/2, start/0, start_link/0,
-    stop/0]).
+-export([encode/2, decode/2, get_encoder_decoder/1,
+    register_encoding/2, start/0, start_link/0, stop/0]).
 
 -export([behaviour_info/1]).
 
@@ -43,6 +43,12 @@ encode(Unicode, Encoding) ->
 %%
 decode(String, Encoding) ->
     gen_server:call(?MODULE, {decode, String, Encoding}).
+
+%%
+%% @doc Return encoder and decoder for the encoding
+%%
+get_encoder_decoder(Encoding) ->
+    gen_server:call(?MODULE, {get_encoder_decoder, Encoding}).
 
 %%
 %% @doc Register encoder and decoder for encoding
@@ -130,6 +136,11 @@ handle_call({encode, Unicode, Encoding}, _From, State) ->
 handle_call({decode, String, Encoding}, _From, State) ->
     Module = ets:lookup_element(?MODULE, Encoding, 2),
     {reply, Module:decode(String), State};
+handle_call({get_encoder_decoder, Encoding}, _From, State) ->
+    Module = ets:lookup_element(?MODULE, Encoding, 2),
+    Encoder = fun(U) -> Module:encode(U) end,
+    Decoder = fun(S) -> Module:decode(S) end,
+    {reply, {Encoder, Decoder}, State};
 handle_call({register_encoding, Encoding, Module}, _From, State) ->
     ets:insert(?MODULE, {Encoding, Module}),
     {reply, ok, State}.
