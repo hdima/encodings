@@ -31,6 +31,7 @@ test_encodings() ->
 
 
 test_encoding(Aliases, {Bytes, Unicode, DecoderErrors, EncoderErrors}) ->
+    % TODO: Extract test for aliases to distinct function?
     test_encode_decode(Aliases, Bytes, Unicode),
     test_decoder_errors(hd(Aliases), DecoderErrors),
     test_encoder_errors(hd(Aliases), EncoderErrors),
