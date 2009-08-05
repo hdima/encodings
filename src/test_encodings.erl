@@ -30,28 +30,52 @@ test_encodings() ->
     ok.
 
 
-test_encoding([], _Info) ->
+test_encoding(Aliases, {Bytes, Unicode, DecoderErrors, EncoderErrors}) ->
+    test_encode_decode(Aliases, Bytes, Unicode),
+    test_decoder_errors(hd(Aliases), DecoderErrors),
+    test_encoder_errors(hd(Aliases), EncoderErrors),
+    ok.
+
+test_encode_decode([], _Bytes, _Unicode) ->
     ok;
-test_encoding([Encoding | Encodings], {Bytes, Unicode}=Info) ->
-    {Encoder, Decoder} = encodings:get_encoder_decoder(Encoding),
-    Bytes = encodings:encode(Unicode, Encoding),
-    Bytes = Encoder(Unicode),
-    Unicode = encodings:decode(Bytes, Encoding),
+test_encode_decode([Alias | Aliases], Bytes, Unicode) ->
+    Unicode = encodings:decode(Bytes, Alias),
+    Bytes = encodings:encode(Unicode, Alias),
+    {Encoder, Decoder} = encodings:get_encoder_decoder(Alias),
     Unicode = Decoder(Bytes),
-    {error, <<>>, [-1]} = encodings:encode([-1], Encoding),
-    test_encoding(Encodings, Info).
+    Bytes = Encoder(Unicode),
+    test_encode_decode(Aliases, Bytes, Unicode).
+
+test_decoder_errors(_, []) ->
+    ok;
+test_decoder_errors(Alias, [{Input, Result} | Errors]) ->
+    Result = encodings:decode(Input, Alias),
+    test_decoder_errors(Alias, Errors).
+
+test_encoder_errors(_, []) ->
+    ok;
+test_encoder_errors(Alias, [{Input, Result} | Errors]) ->
+    Result = encodings:encode(Input, Alias),
+    test_encoder_errors(Alias, Errors).
 
 
 read_tests(Filename) ->
     Path = filename:join([filename:dirname(?FILE), "tests", Filename]),
     {ok, Terms} = file:consult(Path),
-    read_tests(Terms, <<>>, []).
+    read_tests(Terms, <<>>, [], [], []).
 
-%% TODO: Add tests for bad cases
-read_tests([], String, Unicode) ->
-    {String, lists:reverse(Unicode)};
-read_tests([{Bytes, Char} | Tail], String, Unicode) ->
-    read_tests(Tail, <<String/binary,Bytes/binary>>, [Char | Unicode]).
+read_tests([], String, Unicode, DecodeErrors, EncodeErrors) ->
+    {String, lists:reverse(Unicode), DecodeErrors, EncodeErrors};
+read_tests([{decode_errors, Errors} | Tail],
+        String, Unicode, _DecodeErrors, EncodeErrors) ->
+    read_tests(Tail, String, Unicode, Errors, EncodeErrors);
+read_tests([{encode_errors, Errors} | Tail],
+        String, Unicode, DecodeErrors, _EncodeErrors) ->
+    read_tests(Tail, String, Unicode, DecodeErrors, Errors);
+read_tests([{Bytes, Char} | Tail],
+        String, Unicode, DecodeErrors, EncodeErrors) ->
+    read_tests(Tail, <<String/binary,Bytes/binary>>,
+        [Char | Unicode], DecodeErrors, EncodeErrors).
 
 
 test() ->
