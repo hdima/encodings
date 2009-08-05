@@ -22,8 +22,8 @@
 test_encodings() ->
     encodings:start(),
     ok = test_encoding([ascii, "ascii"], read_tests("ascii.txt")),
-    %ok = test_encoding([iso8859_1, "iso88591", latin1, "latin1"],
-    %    read_records("iso8859-1.txt")),
+    ok = test_encoding([iso8859_1, "iso88591", latin1, "latin1"],
+        read_tests("iso8859-1.txt")),
     %ok = test_encoding([cp1251, windows1251, "cp1251", "windows1251"],
     %    read_records("cp1251.txt")),
     encodings:stop(),
