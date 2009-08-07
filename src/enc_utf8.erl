@@ -15,7 +15,7 @@
 %%
 %% @doc UTF-8 encoding
 %%
--module(utf8).
+-module(enc_utf8).
 
 -behaviour(encodings).
 
