@@ -24,12 +24,15 @@ test_encodings() ->
     ok = test_encoding([ascii, "ascii"], read_tests("ascii.txt")),
     ok = test_encoding([iso8859_1, "iso88591", latin1, "latin1"],
         read_tests("iso8859-1.txt")),
-    %ok = test_encoding([cp1251, windows1251, "cp1251", "windows1251"],
-    %    read_records("cp1251.txt")),
+    ok = test_encoding([cp1251, windows1251, "cp1251", "windows1251"],
+        read_tests("cp1251.txt")),
     encodings:stop(),
     ok.
 
 
+%%
+%% @doc Test single encoder/decoder
+%%
 test_encoding(Aliases, {Bytes, Unicode, DecoderErrors, EncoderErrors}) ->
     % TODO: Extract test for aliases to distinct function?
     test_encode_decode(Aliases, Bytes, Unicode),
@@ -60,6 +63,9 @@ test_encoder_errors(Alias, [{Input, Result} | Errors]) ->
     test_encoder_errors(Alias, Errors).
 
 
+%%
+%% @doc Read test specifications
+%%
 read_tests(Filename) ->
     Path = filename:join([filename:dirname(?FILE), "tests", Filename]),
     {ok, Terms} = file:consult(Path),
@@ -67,12 +73,12 @@ read_tests(Filename) ->
 
 read_tests([], String, Unicode, DecodeErrors, EncodeErrors) ->
     {String, lists:reverse(Unicode), DecodeErrors, EncodeErrors};
-read_tests([{decode_errors, Errors} | Tail],
-        String, Unicode, _DecodeErrors, EncodeErrors) ->
-    read_tests(Tail, String, Unicode, Errors, EncodeErrors);
-read_tests([{encode_errors, Errors} | Tail],
-        String, Unicode, DecodeErrors, _EncodeErrors) ->
-    read_tests(Tail, String, Unicode, DecodeErrors, Errors);
+read_tests([{decode, Error} | Tail],
+        String, Unicode, DecodeErrors, EncodeErrors) ->
+    read_tests(Tail, String, Unicode, [Error | DecodeErrors], EncodeErrors);
+read_tests([{encode, Error} | Tail],
+        String, Unicode, DecodeErrors, EncodeErrors) ->
+    read_tests(Tail, String, Unicode, DecodeErrors, [Error | EncodeErrors]);
 read_tests([{Bytes, Char} | Tail],
         String, Unicode, DecodeErrors, EncodeErrors) ->
     read_tests(Tail, <<String/binary,Bytes/binary>>,

@@ -15,7 +15,7 @@
 %%
 %% @doc CP1251 encoding
 %%
--module(cp1251).
+-module(enc_cp1251).
 
 -behaviour(encodings).
 
@@ -33,16 +33,16 @@ aliases() ->
 %% @doc Encode Unicode to Windows-1251 string
 %%
 encode(Unicode) ->
-    encode(Unicode, "").
+    encode(Unicode, <<>>).
 
 encode("", Result) ->
-    lists:reverse(Result);
+    Result;
 encode([C | Tail]=Input, Result) ->
     case encode_char(C) of
         badarg ->
             {error, Result, Input};
         E ->
-            encode(Tail, [E | Result])
+            encode(Tail, <<Result/binary,E>>)
     end.
 
 
@@ -52,14 +52,14 @@ encode([C | Tail]=Input, Result) ->
 decode(String) ->
     decode(String, "").
 
-decode("", Result) ->
+decode(<<>>, Result) ->
     lists:reverse(Result);
-decode([C | Tail]=Input, Result) ->
+decode(<<C,Tail/binary>>=Input, Result) ->
     case decode_char(C) of
         badarg ->
-            {error, Result, Input};
-        E ->
-            decode(Tail, [E | Result])
+            {error, lists:reverse(Result), Input};
+        D ->
+            decode(Tail, [D | Result])
     end.
 
 
