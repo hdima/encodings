@@ -34,18 +34,31 @@ test_encodings() ->
 
 read_utf8(Filename) ->
     {_, _, DecodeErrors, EncodeErrors} = read_tests(Filename),
-    {String, Unicode} = generate_utf8(0, <<>>, ""),
+    {String, Unicode} = gen_utf8(0, <<>>, ""),
     {String, Unicode, DecodeErrors, EncodeErrors}.
 
 %generate_utf8(16#110000, String, Unicode) ->
-generate_utf8(16#1000, String, Unicode) ->
+gen_utf8(16#1000, String, Unicode) ->
     {String, lists:reverse(Unicode)};
-generate_utf8(C, String, Unicode) when C >= 0, C =< 16#7f ->
-    generate_utf8(C + 1, <<String/binary,C>>, [C | Unicode]);
-generate_utf8(C, String, Unicode) when C >= 16#80, C =< 16#7ff ->
-    C1 = 16#c0 bor ((C bsr 6) band 16#7e0),
-    C2 = 16#80 bor (C band 16#7c0),
-    generate_utf8(C + 1, <<String/binary,C1,C2>>, [C | Unicode]).
+gen_utf8(C, String, Unicode) when C >= 0, C =< 16#7f ->
+    gen_utf8(C + 1, <<String/binary,C>>, [C | Unicode]);
+gen_utf8(C, String, Unicode) when C >= 16#80, C =< 16#7ff ->
+    % FIXME: Why 2?
+    gen_utf8(C, 2, 0, String, Unicode).
+%gen_utf8(C, String, Unicode) when C >= 16#800, C =< 16#ffff ->
+%    gen_utf8(C, 0, 0, 0, String, Unicode);
+%gen_utf8(C, String, Unicdoe) when C >= 16#10000, C =< 16#10ffff ->
+%    gen_utf8(C, 0, 0, 0, 0, String, Unicode).
+
+gen_utf8(_, 31, 63, String, Unicode) ->
+    {String, lists:reverse(Unicode)};
+gen_utf8(C, C1, 63, String, Unicode) ->
+    gen_utf8(C + 1, C1 + 1, 0, <<String/binary,2#110:3,C1:5,2#10:2,0:6>>,
+        [C | Unicode]);
+gen_utf8(C, C1, C2, String, Unicode) ->
+    gen_utf8(C + 1, C1 + 1, 0, <<String/binary,2#110:3,C1:5,2#10:2,C2:6>>,
+        [C | Unicode]).
+
 
 %%
 %% @doc Test single encoder/decoder
