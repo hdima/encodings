@@ -1,3 +1,2 @@
 - Alias normalization
-- Fix CP1251
-- Fix tests
+- Fix tests. We don't need to test all aliases for each character.
