@@ -1,2 +1,3 @@
+- Flush unknown messages in all servers
 - Alias normalization
 - Fix tests. We don't need to test all aliases for each character.
