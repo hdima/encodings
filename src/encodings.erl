@@ -16,12 +16,14 @@
 %% @doc Encodings
 %%
 -module(encodings).
+
+%% Public interface
 -export([encode/2, decode/2, get_encoder_decoder/1,
     register_encoding/2, start/0, start_link/0, stop/0]).
 
 -export([behaviour_info/1]).
 
-% gen_server callbacks
+%% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
     terminate/2, code_change/3]).
 
@@ -36,13 +38,15 @@ behaviour_info(_Other) ->
 %% @doc Encode Unicode to binary string with Encoding
 %%
 encode(Unicode, Encoding) ->
-    gen_server:call(?MODULE, {encode, Unicode, Encoding}).
+    {Encoder, _} = get_encoder_decoder(Encoding),
+    Encoder(Unicode).
 
 %%
 %% @doc Decode binary String to Unicode with Encoding
 %%
 decode(String, Encoding) ->
-    gen_server:call(?MODULE, {decode, String, Encoding}).
+    {_, Decoder} = get_encoder_decoder(Encoding),
+    Decoder(String).
 
 %%
 %% @doc Return encoder and decoder for the encoding
@@ -130,12 +134,6 @@ handle_info(_Info, State) ->
     {noreply, State}.
 
 
-handle_call({encode, Unicode, Encoding}, _From, State) ->
-    Module = ets:lookup_element(?MODULE, Encoding, 2),
-    {reply, Module:encode(Unicode), State};
-handle_call({decode, String, Encoding}, _From, State) ->
-    Module = ets:lookup_element(?MODULE, Encoding, 2),
-    {reply, Module:decode(String), State};
 handle_call({get_encoder_decoder, Encoding}, _From, State) ->
     Module = ets:lookup_element(?MODULE, Encoding, 2),
     Encoder = fun(U) -> Module:encode(U) end,
@@ -143,4 +141,6 @@ handle_call({get_encoder_decoder, Encoding}, _From, State) ->
     {reply, {Encoder, Decoder}, State};
 handle_call({register_encoding, Encoding, Module}, _From, State) ->
     ets:insert(?MODULE, {Encoding, Module}),
-    {reply, ok, State}.
+    {reply, ok, State};
+handle_call(_, _, State) ->
+    {reply, badarg, State}.
