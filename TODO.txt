@@ -1,3 +1,8 @@
-- Flush unknown messages in all servers
+- Encode and decode on client and only request encoder and decoder from the
+  server
+
 - Alias normalization
+
+- Flush unknown messages in all servers
+
 - Fix tests. We don't need to test all aliases for each character.
