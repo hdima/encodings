@@ -140,7 +140,6 @@ handle_call({get_encoder_decoder, Encoding}, _From, State) ->
     Decoder = fun(S) -> Module:decode(S) end,
     {reply, {Encoder, Decoder}, State};
 handle_call({register_encoding, Encoding, Module}, _From, State) ->
-    ets:insert(?MODULE, {Encoding, Module}),
-    {reply, ok, State};
+    {reply, ets:insert(?MODULE, {Encoding, Module}), State};
 handle_call(_, _, State) ->
     {reply, badarg, State}.
