@@ -135,11 +135,10 @@ handle_info(_Info, State) ->
 
 
 handle_call({get_encoder_decoder, Encoding}, _From, State) ->
-    [{_, Encoder, Decoder}] = ets:lookup(?MODULE, Encoding),
-    {reply, {Encoder, Decoder}, State};
+    {reply, ets:lookup_element(?MODULE, Encoding, 2), State};
 handle_call({register_encoding, Encoding, Module}, _From, State) ->
     Encoder = fun(U) -> Module:encode(U) end,
     Decoder = fun(S) -> Module:decode(S) end,
-    {reply, ets:insert(?MODULE, {Encoding, Encoder, Decoder}), State};
+    {reply, ets:insert(?MODULE, {Encoding, {Encoder, Decoder}}), State};
 handle_call(_, _, State) ->
     {reply, badarg, State}.
