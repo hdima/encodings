@@ -93,64 +93,19 @@ read_tests([{Bytes, Char} | Tail],
         [Char | Unicode], DecodeErrors, EncodeErrors).
 
 
-gen_utf8(N, 16#7f, Bytes, Unicode) ->
-    gen_utf8(N + 1, 2, 0, <<16#7f, Bytes/binary>>, [N | Unicode]);
-gen_utf8(N, B1, Bytes, Unicode) ->
-    gen_utf8(N + 1, B1 + 1, <<B1, Bytes/binary>>, [N | Unicode]).
-
-gen_utf8(N, 16#1f, 16#3f, Bytes, Unicode) ->
-    gen_utf8(N + 1, 8, 0, 0, <<6:3, 16#1f:5, 2:2, 16#3f:6, Bytes/binary>>,
-        [N | Unicode]);
-gen_utf8(N, B1, 16#3f, Bytes, Unicode) ->
-    gen_utf8(N + 1, B1 + 1, 0, <<6:3, B1:5, 2:2, 16#3f:6, Bytes/binary>>,
-        [N | Unicode]);
-gen_utf8(N, B1, B2, Bytes, Unicode) ->
-    gen_utf8(N + 1, B1, B2 + 1, <<6:3, B1:5, 2:2, B2:6, Bytes/binary>>,
-        [N | Unicode]).
-
-gen_utf8(N, 16#f, 16#3f, 16#3f, Bytes, Unicode) ->
-    gen_utf8(N + 1, 0, 16#10, 0, 0,
-        <<16#e:4, 16#f:4, 2:2, 16#3f:6, 2:2, 16#3f:6, Bytes/binary>>,
-        [N | Unicode]);
-gen_utf8(N, B1, 16#3f, 16#3f, Bytes, Unicode) ->
-    gen_utf8(N + 1, B1 + 1, 0, 0,
-        <<16#e:4, B1:4, 2:2, 16#3f:6, 2:2, 16#3f:6, Bytes/binary>>,
-        [N | Unicode]);
-gen_utf8(N, B1, B2, 16#3f, Bytes, Unicode) ->
-    gen_utf8(N + 1, B1, B2 + 1, 0,
-        <<16#e:4, B1:4, 2:2, B2:6, 2:2, 16#3f:6, Bytes/binary>>,
-        [N | Unicode]);
-gen_utf8(N, B1, B2, B3, Bytes, Unicode) ->
-    gen_utf8(N + 1, B1, B2, B3 + 1,
-        <<16#e:4, B1:4, 2:2, B2:6, 2:2, B3:6, Bytes/binary>>,
-        [N | Unicode]).
-
-
-gen_utf8(N, 4, 16#f, 16#3f, 16#3f, Bytes, Unicode) ->
-    {<<16#16:5, 4:3, 2:2, 16#f:6, 2:2, 16#3f:6, 2:2, 16#3f:6, Bytes/binary>>,
-        [N | Unicode]};
-gen_utf8(N, B1, 16#3f, 16#3f, 16#3f, Bytes, Unicode) ->
-    gen_utf8(N + 1, B1 + 1, 0, 0, 0,
-        <<16#16:5, B1:3, 2:2, 16#3f:6, 2:2, 16#3f:6, 2:2, 16#3f:6, Bytes/binary>>,
-        [N | Unicode]);
-gen_utf8(N, B1, B2, 16#3f, 16#3f, Bytes, Unicode) ->
-    gen_utf8(N + 1, B1, B2 + 1, 0, 0,
-        <<16#16:5, B1:3, 2:2, B2:6, 2:2, 16#3f:6, 2:2, 16#3f:6, Bytes/binary>>,
-        [N | Unicode]);
-gen_utf8(N, B1, B2, B3, 16#3f, Bytes, Unicode) ->
-    gen_utf8(N + 1, B1, B2, B3 + 1, 0,
-        <<16#16:5, B1:3, 2:2, B2:6, 2:2, B3:6, 2:2, 16#3f:6, Bytes/binary>>,
-        [N | Unicode]);
-gen_utf8(N, B1, B2, B3, B4, Bytes, Unicode) ->
-    gen_utf8(N + 1, B1, B2, B3, B4 + 1,
-        <<16#16:5, B1:3, 2:2, B2:6, 2:2, B3:6, 2:2, B4:6, Bytes/binary>>,
-        [N | Unicode]).
-
-
 test_utf8(Aliases) ->
     encodings:start(),
     test_aliases(Aliases),
-    %{Bytes, Unicode} = gen_utf8(0, 0, <<>>, ""),
+    Bytes = <<0,
+        16#7f,
+        16#c2, 16#80,
+        16#df, 16#bf,
+        16#e0, 16#a0, 16#80,
+        16#ef, 16#bf, 16#bd,
+        16#f0, 16#90, 16#80, 16#80,
+        16#f4, 16#8f, 16#bf, 16#bf>>,
+    Unicode = [0, 16#7f, 16#80, 16#7ff, 16#800, 16#fffd, 16#10000, 16#10ffff],
+    test_encode_decode(hd(Aliases), Bytes, Unicode),
     encodings:stop(),
     true.
 
