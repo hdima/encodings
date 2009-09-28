@@ -35,13 +35,13 @@ ebin/%.beam: src/%.erl
 	erlc -Wall -pa ebin -o ebin/ $<
 
 test: compile
-	erl -noshell -pa ebin -s test_encodings test -s init stop
+	erl -noshell -pa ebin -s encodings_app test -s init stop
 
 test-verbose: compile
-	erl -noshell -pa ebin -s test_encodings test verbose -s init stop
+	erl -noshell -pa ebin -s encodings_app test verbose -s init stop
 
 doc: compile
-	erl -noshell -pa ebin -s test_encodings doc -s init stop
+	erl -noshell -pa ebin -s encodings_app generate_docs -s init stop
 
 check:
 	dialyzer --src -c src
