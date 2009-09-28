@@ -45,65 +45,11 @@ aliases() ->
 %% @doc Encode Unicode to UTF-8 string
 %%
 encode(Unicode) ->
-    encode(Unicode, "").
-
-encode("", Result) ->
-    lists:reverse(Result);
-encode([C | Tail], Result) when C >= 0, C =< 16#7f ->
-    encode(Tail, [C | Result]);
-encode([C | Tail], Result) when C >= 16#80, C =< 16#7ff ->
-    encode(Tail, [C band 16#bf, C bsr 6 band 16#df | Result]);
-encode([C | Tail], Result) when C >= 16#800, C =< 16#ffff ->
-    encode(Tail, [C band 16#bf, C bsr 6 band 16#bf, C bsr 12 band 16#ef
-        | Result]);
-encode([C | Tail], Result) when C >= 16#10000, C =< 16#10ffff ->
-    encode(Tail, [C band 16#bf, C bsr 6 band 16#bf, C bsr 12 band 16#bf,
-        C bsr 18 band 16#f7 | Result]);
-encode(Input, Result) ->
-    {error, Result, Input}.
+    unicode:characters_to_binary(Unicode, utf32, utf8).
 
 
 %%
 %% @doc Decode UTF-8 string to Unicode
 %%
 decode(String) ->
-    decode(String, "").
-
-% TODO: What about incomplete strings?
-decode("", Result) ->
-    lists:reverse(Result);
-decode([C | Tail], Result) when C >= 0, C =< 16#7f ->
-    decode(Tail, [C | Result]);
-decode([C1, C2 | Tail], Result)
-        when C1 >= 16#c2, C1 =< 16#df, C2 >= 16#80, C2 =< 16#bf ->
-    todo;
-decode([C1, C2, C3 | Tail], Result)
-        when C1 =:= 16#e0, C2 >= 16#a0, C2 =< 16#bf,
-        C3 >= 16#80, C3 =< 16#bf ->
-    todo;
-decode([C1, C2, C3 | Tail], Result)
-        when C1 =:= 16#ed, C2 >= 16#80, C2 =< 16#9f,
-        C3 >= 16#80, C3 =< 16#bf ->
-    todo;
-decode([C1, C2, C3 | Tail], Result)
-        when C1 >= 16#e1, C1 =< 16#ec, C2 >= 16#80, C2 =< 16#bf,
-        C3 >= 16#80, C3 =< 16#bf ->
-    todo;
-decode([C1, C2, C3 | Tail], Result)
-        when C1 >= 16#ee, C1 =< 16#ef, C2 >= 16#80, C2 =< 16#bf,
-        C3 >= 16#80, C3 =< 16#bf ->
-    todo;
-decode([C1, C2, C3, C4 | Tail], Result)
-        when C1 =:= 16#f4, C2 >= 16#80, C2 =< 16#8f,
-        C3 >= 16#80, C3 =< 16#bf, C4 >= 16#80, C4 =< 16#bf ->
-    todo;
-decode([C1, C2, C3, C4 | Tail], Result)
-        when C1 =:= 16#f0, C2 >= 16#90, C2 =< 16#bf,
-        C3 >= 16#80, C3 =< 16#bf, C4 >= 16#80, C4 =< 16#bf ->
-    todo;
-decode([C1, C2, C3, C4 | Tail], Result)
-        when C1 >= 16#f1, C1 =< 16#f3, C2 >= 16#80, C2 =< 16#bf,
-        C3 >= 16#80, C3 =< 16#bf, C4 >= 16#80, C4 =< 16#bf ->
-    todo;
-decode(Input, Result) ->
-    {error, Result, Input}.
+    unicode:characters_to_list(String, utf8).
