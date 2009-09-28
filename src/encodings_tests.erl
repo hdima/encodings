@@ -40,9 +40,10 @@ test_encoding(Aliases, Filename) ->
     encodings:start(),
     {Bytes, Unicode, DecoderErrors, EncoderErrors} = read_tests(Filename),
     test_aliases(Aliases),
-    test_encode_decode(hd(Aliases), Bytes, Unicode),
-    test_decoder_errors(hd(Aliases), DecoderErrors),
-    test_encoder_errors(hd(Aliases), EncoderErrors),
+    Alias = hd(Aliases),
+    test_encode_decode(Alias, Bytes, Unicode),
+    test_errors(DecoderErrors, fun (I) -> encodings:decode(I, Alias) end),
+    test_errors(EncoderErrors, fun (I) -> encodings:encode(I, Alias) end),
     encodings:stop(),
     true.
 
@@ -66,18 +67,11 @@ test_encode_decode(Alias, Bytes, Unicode) ->
     Bytes = Encoder(Unicode).
 
 
-test_decoder_errors(_, []) ->
+test_errors([], _) ->
     ok;
-test_decoder_errors(Alias, [{Input, Result} | Errors]) ->
-    Result = encodings:decode(Input, Alias),
-    test_decoder_errors(Alias, Errors).
-
-
-test_encoder_errors(_, []) ->
-    ok;
-test_encoder_errors(Alias, [{Input, Result} | Errors]) ->
-    Result = encodings:encode(Input, Alias),
-    test_encoder_errors(Alias, Errors).
+test_errors([{Input, Result} | Errors], Fun) ->
+    Result = Fun(Input),
+    test_errors(Errors, Fun).
 
 
 read_tests(Filename) ->
