@@ -32,42 +32,46 @@
 -include_lib("eunit/include/eunit.hrl").
 
 
-encodings_test_() -> [
-    ?_assert(test_encoding([ascii, "ascii"], read_tests("ascii.txt"))),
-    ?_assert(test_encoding([iso8859_1, "iso88591", latin1, "latin1"],
-        read_tests("iso8859-1.txt"))),
-    ?_assert(test_encoding([cp1251, windows1251, "cp1251", "windows1251"],
-        read_tests("cp1251.txt")))
-    ].
-
-
 %%
-%% @doc Test single encoder/decoder
+%% Auxiliary functions
 %%
-test_encoding(Aliases, {Bytes, Unicode, DecoderErrors, EncoderErrors}) ->
+
+test_encoding(Aliases, Filename) ->
     encodings:start(),
-    % TODO: Extract test for aliases to distinct function?
-    test_encode_decode(Aliases, Bytes, Unicode),
+    {Bytes, Unicode, DecoderErrors, EncoderErrors} = read_tests(Filename),
+    test_aliases(Aliases),
+    test_encode_decode(hd(Aliases), Bytes, Unicode),
     test_decoder_errors(hd(Aliases), DecoderErrors),
     test_encoder_errors(hd(Aliases), EncoderErrors),
     encodings:stop(),
     true.
 
-test_encode_decode([], _Bytes, _Unicode) ->
+
+test_aliases([Alias | Aliases]) ->
+    {Encoder, Decoder} = encodings:get_encoder_decoder(Alias),
+    test_aliases(Aliases, Encoder, Decoder).
+
+test_aliases([], _, _) ->
     ok;
-test_encode_decode([Alias | Aliases], Bytes, Unicode) ->
+test_aliases([Alias | Aliases], Encoder, Decoder) ->
+    {Encoder, Decoder} = encodings:get_encoder_decoder(Alias),
+    test_aliases(Aliases, Encoder, Decoder).
+
+
+test_encode_decode(Alias, Bytes, Unicode) ->
     Unicode = encodings:decode(Bytes, Alias),
     Bytes = encodings:encode(Unicode, Alias),
     {Encoder, Decoder} = encodings:get_encoder_decoder(Alias),
     Unicode = Decoder(Bytes),
-    Bytes = Encoder(Unicode),
-    test_encode_decode(Aliases, Bytes, Unicode).
+    Bytes = Encoder(Unicode).
+
 
 test_decoder_errors(_, []) ->
     ok;
 test_decoder_errors(Alias, [{Input, Result} | Errors]) ->
     Result = encodings:decode(Input, Alias),
     test_decoder_errors(Alias, Errors).
+
 
 test_encoder_errors(_, []) ->
     ok;
@@ -76,9 +80,6 @@ test_encoder_errors(Alias, [{Input, Result} | Errors]) ->
     test_encoder_errors(Alias, Errors).
 
 
-%%
-%% @doc Read test specifications
-%%
 read_tests(Filename) ->
     Path = filename:join([filename:dirname(?FILE), "tests", Filename]),
     {ok, Terms} = file:consult(Path),
@@ -96,3 +97,16 @@ read_tests([{Bytes, Char} | Tail],
         String, Unicode, DecodeErrors, EncodeErrors) ->
     read_tests(Tail, <<String/binary,Bytes/binary>>,
         [Char | Unicode], DecodeErrors, EncodeErrors).
+
+
+%%
+%% Tests
+%%
+
+encodings_test_() -> [
+    ?_assert(test_encoding([ascii, "ascii"], "ascii.txt")),
+    ?_assert(test_encoding([iso8859_1, "iso88591", latin1, "latin1"],
+        "iso8859-1.txt")),
+    ?_assert(test_encoding([cp1251, windows1251, "cp1251", "windows1251"],
+        "cp1251.txt"))
+    ].
