@@ -27,61 +27,31 @@
 %%
 %% @doc Tests
 %%
--module(test_encodings).
+-module(encodings_tests).
 
--export([test/0, doc/0]).
-
-
-test_encodings() ->
-    encodings:start(),
-    %io:format("~p~n", [read_utf8("utf8.txt")]),
-    %ok = test_encoding([utf8, "utf8"], read_utf8("utf8.txt")),
-    ok = test_encoding([ascii, "ascii"], read_tests("ascii.txt")),
-    ok = test_encoding([iso8859_1, "iso88591", latin1, "latin1"],
-        read_tests("iso8859-1.txt")),
-    ok = test_encoding([cp1251, windows1251, "cp1251", "windows1251"],
-        read_tests("cp1251.txt")),
-    encodings:stop(),
-    ok.
+-include_lib("eunit/include/eunit.hrl").
 
 
-read_utf8(Filename) ->
-    {_, _, DecodeErrors, EncodeErrors} = read_tests(Filename),
-    {String, Unicode} = gen_utf8(0, <<>>, ""),
-    {String, Unicode, DecodeErrors, EncodeErrors}.
-
-%generate_utf8(16#110000, String, Unicode) ->
-gen_utf8(16#1000, String, Unicode) ->
-    {String, lists:reverse(Unicode)};
-gen_utf8(C, String, Unicode) when C >= 0, C =< 16#7f ->
-    gen_utf8(C + 1, <<String/binary,C>>, [C | Unicode]);
-gen_utf8(C, String, Unicode) when C >= 16#80, C =< 16#7ff ->
-    % FIXME: Why 2?
-    gen_utf8(C, 2, 0, String, Unicode).
-%gen_utf8(C, String, Unicode) when C >= 16#800, C =< 16#ffff ->
-%    gen_utf8(C, 0, 0, 0, String, Unicode);
-%gen_utf8(C, String, Unicdoe) when C >= 16#10000, C =< 16#10ffff ->
-%    gen_utf8(C, 0, 0, 0, 0, String, Unicode).
-
-gen_utf8(_, 31, 63, String, Unicode) ->
-    {String, lists:reverse(Unicode)};
-gen_utf8(C, C1, 63, String, Unicode) ->
-    gen_utf8(C + 1, C1 + 1, 0, <<String/binary,2#110:3,C1:5,2#10:2,0:6>>,
-        [C | Unicode]);
-gen_utf8(C, C1, C2, String, Unicode) ->
-    gen_utf8(C + 1, C1 + 1, 0, <<String/binary,2#110:3,C1:5,2#10:2,C2:6>>,
-        [C | Unicode]).
+encodings_test_() -> [
+    ?_assert(test_encoding([ascii, "ascii"], read_tests("ascii.txt"))),
+    ?_assert(test_encoding([iso8859_1, "iso88591", latin1, "latin1"],
+        read_tests("iso8859-1.txt"))),
+    ?_assert(test_encoding([cp1251, windows1251, "cp1251", "windows1251"],
+        read_tests("cp1251.txt")))
+    ].
 
 
 %%
 %% @doc Test single encoder/decoder
 %%
 test_encoding(Aliases, {Bytes, Unicode, DecoderErrors, EncoderErrors}) ->
+    encodings:start(),
     % TODO: Extract test for aliases to distinct function?
     test_encode_decode(Aliases, Bytes, Unicode),
     test_decoder_errors(hd(Aliases), DecoderErrors),
     test_encoder_errors(hd(Aliases), EncoderErrors),
-    ok.
+    encodings:stop(),
+    true.
 
 test_encode_decode([], _Bytes, _Unicode) ->
     ok;
@@ -126,11 +96,3 @@ read_tests([{Bytes, Char} | Tail],
         String, Unicode, DecodeErrors, EncodeErrors) ->
     read_tests(Tail, <<String/binary,Bytes/binary>>,
         [Char | Unicode], DecodeErrors, EncodeErrors).
-
-
-test() ->
-    test_encodings().
-
-
-doc() ->
-    edoc:application(encodings, "src", []).
