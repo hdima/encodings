@@ -5,6 +5,7 @@
         encodings_app,
         encodings,
         enc_ascii,
+        enc_utf8,
         enc_iso8859_1,
         enc_cp1251
         ]},

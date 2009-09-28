@@ -90,7 +90,7 @@ start_link() ->
 
 
 register_modules() ->
-    register_modules([enc_ascii, enc_iso8859_1, enc_cp1251]).
+    register_modules([enc_ascii, enc_iso8859_1, enc_cp1251, enc_utf8]).
 
 %%
 %% @doc Register modules
