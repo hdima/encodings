@@ -31,7 +31,7 @@
 
 %% Public interface
 -export([encode/2, decode/2, get_encoder_decoder/1,
-    register_encoding/2, start/0, start_link/0, stop/0]).
+    register_module/1, start/0, start_link/0, stop/0]).
 
 %% Behaviour information
 -export([behaviour_info/1]).
@@ -81,12 +81,11 @@ get_encoder_decoder(Encoding) ->
 
 %%
 %% @doc Register callback module for encoding
-%% @spec register_encoding(Encoding, Module) -> ok
-%%      Encoding = string() | atom()
+%% @spec register_module(Module) -> ok
 %%      Module = module()
 %%
-register_encoding(Encoding, Module) ->
-    gen_server:call(?MODULE, {register_encoding, Encoding, Module}).
+register_module(Module) ->
+    gen_server:call(?MODULE, {register_module, Module}).
 
 
 %%
@@ -116,17 +115,8 @@ register_modules() ->
 register_modules([]) ->
     ok;
 register_modules([Module | Modules]) ->
-    register_module(Module, Module:aliases()),
+    register_module(Module),
     register_modules(Modules).
-
-%%
-%% @doc Register module
-%%
-register_module(_Module, []) ->
-    ok;
-register_module(Module, [Encoding | Encodings]) ->
-    register_encoding(Encoding, Module),
-    register_module(Module, Encodings).
 
 
 %%
@@ -167,9 +157,16 @@ handle_info(_Info, State) ->
 
 handle_call({get_encoder_decoder, Encoding}, _From, State) ->
     {reply, ets:lookup_element(?MODULE, Encoding, 2), State};
-handle_call({register_encoding, Encoding, Module}, _From, State) ->
+handle_call({register_module, Module}, _From, State) ->
     Encoder = fun(U) -> Module:encode(U) end,
     Decoder = fun(S) -> Module:decode(S) end,
-    {reply, ets:insert(?MODULE, {Encoding, {Encoder, Decoder}}), State};
+    {reply, register_encoding(Module:aliases(), Encoder, Decoder), State};
 handle_call(_, _, State) ->
     {reply, badarg, State}.
+
+
+register_encoding([], _, _) ->
+    ok;
+register_encoding([Encoding | Encodings], Encoder, Decoder) ->
+    ets:insert(?MODULE, {Encoding, {Encoder, Decoder}}),
+    register_encoding(Encodings, Encoder, Decoder).
