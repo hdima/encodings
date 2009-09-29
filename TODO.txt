@@ -1,3 +1,7 @@
 - Alias normalization
 
-- Fix tests. We don't need to test all aliases for each character.
+- Split key encoding name and aliases
+
+- Add interface to register encoder/decoder as functions
+
+- Do we need unregister function?
