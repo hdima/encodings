@@ -49,20 +49,20 @@ test_encoding(Aliases, Filename) ->
 
 
 test_aliases([Alias | Aliases]) ->
-    {Encoder, Decoder} = encodings:get_encoder_decoder(Alias),
+    {ok, Encoder, Decoder} = encodings:get_encoder_decoder(Alias),
     test_aliases(Aliases, Encoder, Decoder).
 
 test_aliases([], _, _) ->
     true;
 test_aliases([Alias | Aliases], Encoder, Decoder) ->
-    {Encoder, Decoder} = encodings:get_encoder_decoder(Alias),
+    {ok, Encoder, Decoder} = encodings:get_encoder_decoder(Alias),
     test_aliases(Aliases, Encoder, Decoder).
 
 
 test_encode_decode(Alias, Bytes, Unicode) ->
     Unicode = encodings:decode(Bytes, Alias),
     Bytes = encodings:encode(Unicode, Alias),
-    {Encoder, Decoder} = encodings:get_encoder_decoder(Alias),
+    {ok, Encoder, Decoder} = encodings:get_encoder_decoder(Alias),
     Unicode = Decoder(Bytes),
     Bytes = Encoder(Unicode).
 
@@ -109,6 +109,20 @@ test_utf8(Aliases) ->
     encodings:stop(),
     true.
 
+
+test_registration() ->
+    encodings:start(),
+    {error, badarg} = encodings:get_encoder_decoder("encoding"),
+    encodings:register_encoder_decoder(["encoding"],
+        fun (U) -> "Encoded " ++ U end,
+        fun (S) -> "Decoded " ++ S end),
+    {ok, Encoder, Decoder} = encodings:get_encoder_decoder("encoding"),
+    "Encoded Unicode" = Encoder("Unicode"),
+    "Decoded String" = Decoder("String"),
+    encodings:stop(),
+    true.
+
+
 %%
 %% Tests
 %%
@@ -119,6 +133,11 @@ encodings_test_() -> [
         "iso8859-1.txt")),
     ?_assert(test_encoding([cp1251, windows1251, "cp1251", "windows1251"],
         "cp1251.txt"))
+    ].
+
+
+registration_test_() -> [
+    ?_assert(test_registration())
     ].
 
 

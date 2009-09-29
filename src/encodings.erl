@@ -56,7 +56,7 @@ behaviour_info(_Other) ->
 %%      String = binary()
 %%
 encode(Unicode, Encoding) ->
-    {Encoder, _} = get_encoder_decoder(Encoding),
+    {ok, Encoder, _} = get_encoder_decoder(Encoding),
     Encoder(Unicode).
 
 %%
@@ -67,15 +67,16 @@ encode(Unicode, Encoding) ->
 %%      Unicode = string()
 %%
 decode(String, Encoding) ->
-    {_, Decoder} = get_encoder_decoder(Encoding),
+    {ok, _, Decoder} = get_encoder_decoder(Encoding),
     Decoder(String).
 
 %%
 %% @doc Return encoder and decoder for the encoding
-%% @spec get_encoder_decoder(Encoding) -> {Encoder, Decoder}
+%% @spec get_encoder_decoder(Encoding) -> Result
 %%      Encoding = string() | atom()
 %%      Encoder = function()
 %%      Decoder = function()
+%%      Result = {ok, Encoder, Decoder} | {error, badarg}
 %%
 get_encoder_decoder(Encoding) ->
     gen_server:call(?MODULE, {get_encoder_decoder, Encoding}).
@@ -170,10 +171,17 @@ handle_info(_Info, State) ->
 
 
 handle_call({get_encoder_decoder, Encoding}, _From, State) ->
-    {reply, ets:lookup_element(?MODULE, Encoding, 2), State};
+    Result = try ets:lookup_element(?MODULE, Encoding, 2) of
+        {Encoder, Decoder} ->
+            {ok, Encoder, Decoder}
+    catch
+        error:badarg ->
+            {error, badarg}
+    end,
+    {reply, Result, State};
 handle_call({register_module, Module}, _From, State) ->
-    Encoder = fun(U) -> Module:encode(U) end,
-    Decoder = fun(S) -> Module:decode(S) end,
+    Encoder = fun (U) -> Module:encode(U) end,
+    Decoder = fun (S) -> Module:decode(S) end,
     {reply, register_encoding(Module:aliases(), Encoder, Decoder), State};
 handle_call({register_encoder_decoder, Encodings, Encoder, Decoder},
         _From, State) ->
