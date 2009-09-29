@@ -107,7 +107,7 @@ start_link() ->
 register_modules() ->
     Path = filename:dirname(?FILE),
     {ok, Filenames} = file:list_dir(Path),
-    register_modules([list_to_atom(filename:rootname(N))
+    register_modules([list_to_existing_atom(filename:rootname(N))
         || N <- Filenames, string:str(N, "enc_") =:= 1]).
 
 %%
