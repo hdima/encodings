@@ -49,6 +49,10 @@ behaviour_info(_Other) ->
 
 %%
 %% @doc Encode Unicode to binary string with Encoding
+%% @spec encode(Unicode, Encoding) -> String
+%%      Unicode = string()
+%%      Encoding = string() | atom()
+%%      String = binary()
 %%
 encode(Unicode, Encoding) ->
     {Encoder, _} = get_encoder_decoder(Encoding),
@@ -56,6 +60,10 @@ encode(Unicode, Encoding) ->
 
 %%
 %% @doc Decode binary String to Unicode with Encoding
+%% @spec decode(String, Encoding) -> Unicode
+%%      String = binary()
+%%      Encoding = string() | atom()
+%%      Unicode = string()
 %%
 decode(String, Encoding) ->
     {_, Decoder} = get_encoder_decoder(Encoding),
@@ -63,12 +71,19 @@ decode(String, Encoding) ->
 
 %%
 %% @doc Return encoder and decoder for the encoding
+%% @spec get_encoder_decoder(Encoding) -> {Encoder, Decoder}
+%%      Encoding = string() | atom()
+%%      Encoder = function()
+%%      Decoder = function()
 %%
 get_encoder_decoder(Encoding) ->
     gen_server:call(?MODULE, {get_encoder_decoder, Encoding}).
 
 %%
-%% @doc Register encoder and decoder for encoding
+%% @doc Register callback module for encoding
+%% @spec register_encoding(Encoding, Module) -> ok
+%%      Encoding = string() | atom()
+%%      Module = module()
 %%
 register_encoding(Encoding, Module) ->
     gen_server:call(?MODULE, {register_encoding, Encoding, Module}).
