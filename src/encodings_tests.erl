@@ -37,14 +37,12 @@
 %%
 
 test_encoding(Aliases, Filename) ->
-    encodings:start(),
     {Bytes, Unicode, DecoderErrors, EncoderErrors} = read_tests(Filename),
     test_aliases(Aliases),
     Alias = hd(Aliases),
     test_encode_decode(Alias, Bytes, Unicode),
     test_errors(DecoderErrors, fun (I) -> encodings:decode(I, Alias) end),
     test_errors(EncoderErrors, fun (I) -> encodings:encode(I, Alias) end),
-    encodings:stop(),
     true.
 
 
@@ -94,7 +92,6 @@ read_tests([{Bytes, Char} | Tail],
 
 
 test_utf8(Aliases) ->
-    encodings:start(),
     test_aliases(Aliases),
     Bytes = <<0,
         16#7f,
@@ -106,12 +103,10 @@ test_utf8(Aliases) ->
         16#f4, 16#8f, 16#bf, 16#bf>>,
     Unicode = [0, 16#7f, 16#80, 16#7ff, 16#800, 16#fffd, 16#10000, 16#10ffff],
     test_encode_decode(hd(Aliases), Bytes, Unicode),
-    encodings:stop(),
     true.
 
 
 test_registration() ->
-    encodings:start(),
     {error, badarg} = encodings:get_encoder_decoder("encoding"),
     encodings:register_encoder_decoder(["encoding"],
         fun (U) -> "Encoded " ++ U end,
@@ -119,7 +114,6 @@ test_registration() ->
     {ok, Encoder, Decoder} = encodings:get_encoder_decoder("encoding"),
     "Encoded Unicode" = Encoder("Unicode"),
     "Decoded String" = Decoder("String"),
-    encodings:stop(),
     true.
 
 
@@ -127,20 +121,27 @@ test_registration() ->
 %% Tests
 %%
 
-encodings_test_() -> [
+setup() ->
+    encodings:start().
+
+cleanup(_) ->
+    encodings:stop().
+
+
+encodings_test_() -> {setup, fun setup/0, fun cleanup/1, [
     ?_assert(test_encoding([ascii, "ascii"], "ascii.txt")),
     ?_assert(test_encoding([iso8859_1, "iso88591", latin1, "latin1"],
         "iso8859-1.txt")),
     ?_assert(test_encoding([cp1251, windows1251, "cp1251", "windows1251"],
         "cp1251.txt"))
-    ].
+    ]}.
 
 
-registration_test_() -> [
+registration_test_() -> {setup, fun setup/0, fun cleanup/1, [
     ?_assert(test_registration())
-    ].
+    ]}.
 
 
-utf8_test_() -> [
+utf8_test_() -> {setup, fun setup/0, fun cleanup/1, [
     ?_assert(test_utf8([utf8, "utf8"]))
-    ].
+    ]}.

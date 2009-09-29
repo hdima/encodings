@@ -138,7 +138,8 @@ register_modules([Module | Modules]) ->
 %% @doc Stop encoder process
 %%
 stop() ->
-    gen_server:cast(?MODULE, stop).
+    gen_server:cast(?MODULE, stop),
+    timer:sleep(10).
 
 
 %%
