@@ -105,7 +105,10 @@ start_link() ->
 
 
 register_modules() ->
-    register_modules([enc_ascii, enc_iso8859_1, enc_cp1251, enc_utf8]).
+    Path = filename:dirname(?FILE),
+    {ok, Filenames} = file:list_dir(Path),
+    register_modules([list_to_atom(filename:rootname(N))
+        || N <- Filenames, string:str(N, "enc_") =:= 1]).
 
 %%
 %% @doc Register modules

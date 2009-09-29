@@ -4,6 +4,4 @@
 
 - Add interface to register encoder/decoder as functions
 
-- Automatic loading of enc_* modules
-
 - Do we need unregister function?
