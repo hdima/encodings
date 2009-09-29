@@ -31,7 +31,8 @@
 
 %% Public interface
 -export([encode/2, decode/2, get_encoder_decoder/1,
-    register_module/1, start/0, start_link/0, stop/0]).
+    register_module/1, register_encoder_decoder/3,
+    start/0, start_link/0, stop/0]).
 
 %% Behaviour information
 -export([behaviour_info/1]).
@@ -86,6 +87,19 @@ get_encoder_decoder(Encoding) ->
 %%
 register_module(Module) ->
     gen_server:call(?MODULE, {register_module, Module}).
+
+
+%%
+%% @doc Register encoder and decoder as functions
+%% @spec register_encoder_decoder(Encodings, Encoder, Decoder) -> ok
+%%      Encodings = [Encoding]
+%%      Encoding = string() | atom()
+%%      Encoder = function()
+%%      Decoder = function()
+%%
+register_encoder_decoder(Encodings, Encoder, Decoder) ->
+    gen_server:call(?MODULE, {register_encoder_decoder,
+        Encodings, Encoder, Decoder}).
 
 
 %%
@@ -161,6 +175,9 @@ handle_call({register_module, Module}, _From, State) ->
     Encoder = fun(U) -> Module:encode(U) end,
     Decoder = fun(S) -> Module:decode(S) end,
     {reply, register_encoding(Module:aliases(), Encoder, Decoder), State};
+handle_call({register_encoder_decoder, Encodings, Encoder, Decoder},
+        _From, State) ->
+    {reply, register_encoding(Encodings, Encoder, Decoder), State};
 handle_call(_, _, State) ->
     {reply, badarg, State}.
 

@@ -118,6 +118,10 @@ encodings_test_() -> [
     ?_assert(test_encoding([iso8859_1, "iso88591", latin1, "latin1"],
         "iso8859-1.txt")),
     ?_assert(test_encoding([cp1251, windows1251, "cp1251", "windows1251"],
-        "cp1251.txt")),
-    {timeout, 300, ?_assert(test_utf8([utf8, "utf8"]))}
+        "cp1251.txt"))
+    ].
+
+
+utf8_test_() -> [
+    ?_assert(test_utf8([utf8, "utf8"]))
     ].
