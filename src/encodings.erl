@@ -134,7 +134,6 @@ stop() ->
 %% @doc Initialise process
 %%
 init([]) ->
-    process_flag(trap_exit, true),
     ets:new(?MODULE, [set, private, named_table]),
     gen_server:cast(?MODULE, register_builtin_modules),
     {ok, none}.
