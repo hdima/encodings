@@ -106,8 +106,8 @@ test_utf8(Aliases) ->
     true.
 
 
-test_registration() ->
-    encodings:unregister_encoder_decoder("encoding"),
+test_register_unregister_encoding() ->
+    encodings:unregister_encoding("encoding"),
     {error, badarg} = encodings:get_encoder_decoder("encoding"),
     encodings:register_encoder_decoder(["encoding"],
         fun (U) -> "Encoded " ++ U end,
@@ -115,8 +115,17 @@ test_registration() ->
     {ok, Encoder, Decoder} = encodings:get_encoder_decoder("encoding"),
     "Encoded Unicode" = Encoder("Unicode"),
     "Decoded String" = Decoder("String"),
-    encodings:unregister_encoder_decoder("encoding"),
+    encodings:unregister_encoding("encoding"),
     {error, badarg} = encodings:get_encoder_decoder("encoding"),
+    true.
+
+
+test_register_unregister_module() ->
+    {ok, Encoder, Decoder} = encodings:get_encoder_decoder("ascii"),
+    encodings:unregister_module(enc_ascii),
+    {error, badarg} = encodings:get_encoder_decoder("ascii"),
+    encodings:register_module(enc_ascii),
+    {ok, Encoder, Decoder} = encodings:get_encoder_decoder("ascii"),
     true.
 
 
@@ -141,7 +150,8 @@ encodings_test_() -> {setup, fun setup/0, fun cleanup/1, [
 
 
 registration_test_() -> {setup, fun setup/0, fun cleanup/1, [
-    ?_assert(test_registration())
+    ?_assert(test_register_unregister_encoding()),
+    ?_assert(test_register_unregister_module())
     ]}.
 
 

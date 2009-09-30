@@ -32,7 +32,7 @@
 %% Public interface
 -export([encode/2, decode/2, get_encoder_decoder/1,
     register_module/1, register_encoder_decoder/3,
-    unregister_encoder_decoder/1,
+    unregister_module/1, unregister_encoding/1,
     start/0, start_link/0, stop/0]).
 
 %% Behaviour information
@@ -89,12 +89,21 @@ get_encoder_decoder(Encoding) ->
     gen_server:call(?MODULE, {get_encoder_decoder, Encoding}).
 
 %%
-%% @doc Register callback module for encoding
+%% @doc Register callback module
 %% @spec register_module(Module) -> ok
 %%      Module = module()
 %%
 register_module(Module) ->
     gen_server:call(?MODULE, {register_module, Module}).
+
+
+%%
+%% @doc Unregister callback module
+%% @spec unregister_module(Module) -> ok
+%%      Module = module()
+%%
+unregister_module(Module) ->
+    gen_server:call(?MODULE, {unregister_module, Module}).
 
 
 %%
@@ -111,12 +120,12 @@ register_encoder_decoder(Encodings, Encoder, Decoder) ->
 
 
 %%
-%% @doc Unregister ancoder/decoder
-%% @spec unregister_encoder_decoder(Encoding) -> ok
+%% @doc Unregister encoding
+%% @spec unregister_encoding(Encoding) -> ok
 %%      Encoding = string() | atom()
 %%
-unregister_encoder_decoder(Encoding) ->
-    gen_server:call(?MODULE, {unregister_encoder_decoder, Encoding}).
+unregister_encoding(Encoding) ->
+    gen_server:call(?MODULE, {unregister_encoding, Encoding}).
 
 
 %%
@@ -184,11 +193,13 @@ handle_call({get_encoder_decoder, Encoding}, _From, State) ->
     {reply, Result, State};
 handle_call({register_module, Module}, _From, State) ->
     {reply, register_module_internally(Module), State};
+handle_call({unregister_module, Module}, _From, State) ->
+    {reply, unregister_module_internally(Module), State};
 handle_call({register_encoder_decoder, Encodings, Encoder, Decoder},
         _From, State) ->
     {reply, register_encoding(Encodings, Encoder, Decoder), State};
-handle_call({unregister_encoder_decoder, Encoding}, _From, State) ->
-    {reply, unregister_encoding(Encoding), State};
+handle_call({unregister_encoding, Encoding}, _From, State) ->
+    {reply, unregister_encoding_internally(Encoding), State};
 handle_call(_, _, State) ->
     {reply, badarg, State}.
 
@@ -223,6 +234,13 @@ register_module_internally(Module) ->
 
 
 %%
+%% @doc Unregister module
+%%
+unregister_module_internally(Module) ->
+    unregister_encoding_internally(hd(Module:aliases())).
+
+
+%%
 %% @doc Register encoder/decoder
 %%
 register_encoding(Aliases, Encoder, Decoder) ->
@@ -238,7 +256,7 @@ register_encoding([Encoding | Encodings], Aliases, Encoder, Decoder) ->
 %%
 %% @doc Unregister encoder/decoder
 %%
-unregister_encoding(Encoding) ->
+unregister_encoding_internally(Encoding) ->
     case ets:lookup(?MODULE, Encoding) of
         [] ->
             ok;
