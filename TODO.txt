@@ -2,6 +2,3 @@
 
 - Add option 'override' to register_module/register_encoder_decoder and return
   error if encoding already defined and no option given
-
-- Do we need unregister function? We need to store all aliases for each
-  encoding to remove them all if needed

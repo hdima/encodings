@@ -32,6 +32,7 @@
 %% Public interface
 -export([encode/2, decode/2, get_encoder_decoder/1,
     register_module/1, register_encoder_decoder/3,
+    unregister_encoder_decoder/1,
     start/0, start_link/0, stop/0]).
 
 %% Behaviour information
@@ -110,6 +111,15 @@ register_encoder_decoder(Encodings, Encoder, Decoder) ->
 
 
 %%
+%% @doc Unregister ancoder/decoder
+%% @spec unregister_encoder_decoder(Encoding) -> ok
+%%      Encoding = string() | atom()
+%%
+unregister_encoder_decoder(Encoding) ->
+    gen_server:call(?MODULE, {unregister_encoder_decoder, Encoding}).
+
+
+%%
 %% @doc Start encoder process
 %%
 start() ->
@@ -177,6 +187,8 @@ handle_call({register_module, Module}, _From, State) ->
 handle_call({register_encoder_decoder, Encodings, Encoder, Decoder},
         _From, State) ->
     {reply, register_encoding(Encodings, Encoder, Decoder), State};
+handle_call({unregister_encoder_decoder, Encoding}, _From, State) ->
+    {reply, unregister_encoding(Encoding), State};
 handle_call(_, _, State) ->
     {reply, badarg, State}.
 
@@ -221,3 +233,21 @@ register_encoding([], _, _, _) ->
 register_encoding([Encoding | Encodings], Aliases, Encoder, Decoder) ->
     ets:insert(?MODULE, {Encoding, Aliases, {Encoder, Decoder}}),
     register_encoding(Encodings, Aliases, Encoder, Decoder).
+
+
+%%
+%% @doc Unregister encoder/decoder
+%%
+unregister_encoding(Encoding) ->
+    case ets:lookup(?MODULE, Encoding) of
+        [] ->
+            ok;
+        [{_, Aliases, _}] ->
+            unregister_aliases(Aliases)
+    end.
+
+unregister_aliases([]) ->
+    ok;
+unregister_aliases([Alias | Aliases]) ->
+    ets:delete(?MODULE, Alias),
+    unregister_aliases(Aliases).

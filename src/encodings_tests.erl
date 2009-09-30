@@ -107,6 +107,7 @@ test_utf8(Aliases) ->
 
 
 test_registration() ->
+    encodings:unregister_encoder_decoder("encoding"),
     {error, badarg} = encodings:get_encoder_decoder("encoding"),
     encodings:register_encoder_decoder(["encoding"],
         fun (U) -> "Encoded " ++ U end,
@@ -114,6 +115,8 @@ test_registration() ->
     {ok, Encoder, Decoder} = encodings:get_encoder_decoder("encoding"),
     "Encoded Unicode" = Encoder("Unicode"),
     "Decoded String" = Decoder("String"),
+    encodings:unregister_encoder_decoder("encoding"),
+    {error, badarg} = encodings:get_encoder_decoder("encoding"),
     true.
 
 
