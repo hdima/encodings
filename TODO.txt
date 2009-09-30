@@ -1,5 +1,12 @@
 - Alias normalization
 
-- Split key encoding name and aliases
+- Add option 'override' to register_module/register_encoder_decoder and return
+  error if encoding already defined and no option given
 
-- Do we need unregister function?
+- Do we need unregister function? We need to store all aliases for each
+  encoding to remove them all if needed
+
+- Add an option to completely remove all aliases on unregister
+
+- Instantiate standard encoding modules on server start through asynchronous
+  message?
