@@ -154,7 +154,7 @@ stop() ->
 %%
 init([]) ->
     ets:new(?MODULE, [set, private, named_table]),
-    gen_server:cast(?MODULE, register_builtin_modules),
+    register_builtin_modules(),
     {ok, none}.
 
 terminate(_Reason, _State) ->
@@ -169,9 +169,6 @@ code_change(_OldVsn, State, _Extra) ->
 %% Message handling
 %%
 
-handle_cast(register_builtin_modules, State) ->
-    register_builtin_modules(),
-    {noreply, State};
 handle_cast(stop, State) ->
     {stop, normal, State};
 handle_cast(_Msg, State) ->
