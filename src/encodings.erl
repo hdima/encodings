@@ -164,7 +164,7 @@ handle_info(_Info, State) ->
 
 
 handle_call({get_encoder_decoder, Encoding}, _From, State) ->
-    Result = try ets:lookup_element(?MODULE, Encoding, 2) of
+    Result = try ets:lookup_element(?MODULE, Encoding, 3) of
         {Encoder, Decoder} ->
             {ok, Encoder, Decoder}
     catch
@@ -213,8 +213,11 @@ register_module_internally(Module) ->
 %%
 %% @doc Register encoder/decoder
 %%
-register_encoding([], _, _) ->
+register_encoding(Aliases, Encoder, Decoder) ->
+    register_encoding(Aliases, Aliases, Encoder, Decoder).
+
+register_encoding([], _, _, _) ->
     ok;
-register_encoding([Encoding | Encodings], Encoder, Decoder) ->
-    ets:insert(?MODULE, {Encoding, {Encoder, Decoder}}),
-    register_encoding(Encodings, Encoder, Decoder).
+register_encoding([Encoding | Encodings], Aliases, Encoder, Decoder) ->
+    ets:insert(?MODULE, {Encoding, Aliases, {Encoder, Decoder}}),
+    register_encoding(Encodings, Aliases, Encoder, Decoder).
