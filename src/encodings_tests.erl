@@ -109,10 +109,12 @@ test_utf8(Aliases) ->
 test_register_unregister_encoding() ->
     encodings:unregister_encoding("encoding"),
     {error, badarg} = encodings:get_encoder_decoder("encoding"),
-    encodings:register_encoder_decoder(["encoding"],
+    encodings:register_encoder_decoder(["encoding", "an encoding"],
         fun (U) -> "Encoded " ++ U end,
         fun (S) -> "Decoded " ++ S end),
     {ok, Encoder, Decoder} = encodings:get_encoder_decoder("encoding"),
+    {ok, Encoder, Decoder} = encodings:get_encoder_decoder("anencoding"),
+    {ok, Encoder, Decoder} = encodings:get_encoder_decoder("an encoding"),
     "Encoded Unicode" = Encoder("Unicode"),
     "Decoded String" = Decoder("String"),
     encodings:unregister_encoding("encoding"),
@@ -142,9 +144,9 @@ cleanup(_) ->
 
 encodings_test_() -> {setup, fun setup/0, fun cleanup/1, [
     ?_assert(test_encoding([ascii, "ascii"], "ascii.txt")),
-    ?_assert(test_encoding([iso8859_1, "iso88591", latin1, "latin1"],
+    ?_assert(test_encoding([iso8859_1, "iso-88591", latin1, "latin-1"],
         "iso8859-1.txt")),
-    ?_assert(test_encoding([cp1251, windows1251, "cp1251", "windows1251"],
+    ?_assert(test_encoding([cp1251, windows1251, "cp_1251", "windows 1251"],
         "cp1251.txt"))
     ]}.
 

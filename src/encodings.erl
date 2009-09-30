@@ -42,6 +42,9 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
     terminate/2, code_change/3]).
 
+%% RE of symbols which need to be ignored in encoding name
+-define(IGNORE_IN_NAMES, "[ -_.]+").
+
 
 %%
 %% @doc Behaviour information
@@ -154,8 +157,9 @@ stop() ->
 %%
 init([]) ->
     ets:new(?MODULE, [set, private, named_table]),
-    register_builtin_modules(),
-    {ok, none}.
+    {ok, RE} = re:compile(?IGNORE_IN_NAMES),
+    register_builtin_modules(RE),
+    {ok, RE}.
 
 terminate(_Reason, _State) ->
     ets:delete(?MODULE),
@@ -179,24 +183,25 @@ handle_info(_Info, State) ->
     {noreply, State}.
 
 
-handle_call({get_encoder_decoder, Encoding}, _From, State) ->
-    Result = try ets:lookup_element(?MODULE, Encoding, 3) of
+handle_call({get_encoder_decoder, Encoding}, _From, RE) ->
+    E = normalize_encoding_name(Encoding, RE),
+    Result = try ets:lookup_element(?MODULE, E, 3) of
         {Encoder, Decoder} ->
             {ok, Encoder, Decoder}
     catch
         error:badarg ->
             {error, badarg}
     end,
-    {reply, Result, State};
-handle_call({register_module, Module}, _From, State) ->
-    {reply, register_module_internally(Module), State};
-handle_call({unregister_module, Module}, _From, State) ->
-    {reply, unregister_module_internally(Module), State};
+    {reply, Result, RE};
+handle_call({register_module, Module}, _From, RE) ->
+    {reply, register_module_internally(Module, RE), RE};
+handle_call({unregister_module, Module}, _From, RE) ->
+    {reply, unregister_module_internally(Module, RE), RE};
 handle_call({register_encoder_decoder, Encodings, Encoder, Decoder},
-        _From, State) ->
-    {reply, register_encoding(Encodings, Encoder, Decoder), State};
-handle_call({unregister_encoding, Encoding}, _From, State) ->
-    {reply, unregister_encoding_internally(Encoding), State};
+        _From, RE) ->
+    {reply, register_encoding(Encodings, Encoder, Decoder, RE), RE};
+handle_call({unregister_encoding, Encoding}, _From, RE) ->
+    {reply, unregister_encoding_internally(Encoding, RE), RE};
 handle_call(_, _, State) ->
     {reply, badarg, State}.
 
@@ -206,55 +211,69 @@ handle_call(_, _, State) ->
 %%
 
 %%
+%% @doc Normalize encoding name
+%% @spec normalize_encoding_name(Name, RE) -> NewName
+%%      Name = string()
+%%      RE = mp()
+%%      NewName = string()
+%%
+normalize_encoding_name(Name, RE) when is_list(Name) ->
+    re:replace(Name, RE, "", [global, {return, list}]);
+normalize_encoding_name(Name, _) ->
+    Name.
+
+%%
 %% @doc Register builtin modules
 %%
-register_builtin_modules() ->
+register_builtin_modules(RE) ->
     Path = filename:dirname(?FILE),
     {ok, Filenames} = file:list_dir(Path),
     register_builtin_modules([list_to_existing_atom(filename:rootname(N))
-        || N <- Filenames, string:str(N, "enc_") =:= 1]).
+        || N <- Filenames, string:str(N, "enc_") =:= 1], RE).
 
-register_builtin_modules([]) ->
+register_builtin_modules([], _) ->
     ok;
-register_builtin_modules([Module | Modules]) ->
-    register_module_internally(Module),
-    register_builtin_modules(Modules).
+register_builtin_modules([Module | Modules], RE) ->
+    register_module_internally(Module, RE),
+    register_builtin_modules(Modules, RE).
 
 
 %%
 %% @doc Register module
 %%
-register_module_internally(Module) ->
+register_module_internally(Module, RE) ->
     Encoder = fun (U) -> Module:encode(U) end,
     Decoder = fun (S) -> Module:decode(S) end,
-    register_encoding(Module:aliases(), Encoder, Decoder).
+    register_encoding(Module:aliases(), Encoder, Decoder, RE).
 
 
 %%
 %% @doc Unregister module
 %%
-unregister_module_internally(Module) ->
-    unregister_encoding_internally(hd(Module:aliases())).
+unregister_module_internally(Module, RE) ->
+    unregister_encoding_internally(hd(Module:aliases()), RE).
 
 
 %%
 %% @doc Register encoder/decoder
 %%
-register_encoding(Aliases, Encoder, Decoder) ->
-    register_encoding(Aliases, Aliases, Encoder, Decoder).
+register_encoding(Aliases, Encoder, Decoder, RE) ->
+    register_encoding(Aliases, Aliases, Encoder, Decoder, RE).
 
-register_encoding([], _, _, _) ->
+register_encoding([], _Aliases, _Encoder, _Decoder, _RE) ->
     ok;
-register_encoding([Encoding | Encodings], Aliases, Encoder, Decoder) ->
-    ets:insert(?MODULE, {Encoding, Aliases, {Encoder, Decoder}}),
-    register_encoding(Encodings, Aliases, Encoder, Decoder).
+register_encoding([Encoding | Encodings], Aliases, Encoder, Decoder, RE) ->
+    E = normalize_encoding_name(Encoding, RE),
+    ets:insert(?MODULE, {E, Aliases, {Encoder, Decoder}}),
+    register_encoding(Encodings, Aliases, Encoder, Decoder, RE).
 
 
 %%
 %% @doc Unregister encoder/decoder
 %%
-unregister_encoding_internally(Encoding) ->
-    case ets:lookup(?MODULE, Encoding) of
+unregister_encoding_internally(Encoding, RE) ->
+    E = normalize_encoding_name(Encoding, RE),
+    case ets:lookup(?MODULE, E) of
         [] ->
             ok;
         [{_, Aliases, _}] ->
