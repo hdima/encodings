@@ -42,6 +42,12 @@
     terminate/2, code_change/3]).
 
 
+%%
+%% @doc Behaviour information
+%% @spec behaviour_info(callbacks) -> Callbacks
+%%      Callbacks = [{module(), Arity}]
+%%      Arity = integer()
+%%
 behaviour_info(callbacks) ->
     [{aliases, 0}, {encode, 1}, {decode, 1}];
 behaviour_info(_Other) ->
@@ -107,31 +113,13 @@ register_encoder_decoder(Encodings, Encoder, Decoder) ->
 %% @doc Start encoder process
 %%
 start() ->
-    gen_server:start({local, ?MODULE}, ?MODULE, [], []),
-    register_modules().
+    gen_server:start({local, ?MODULE}, ?MODULE, [], []).
 
 %%
 %% @doc Start encoder process
 %%
 start_link() ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []),
-    register_modules().
-
-
-register_modules() ->
-    Path = filename:dirname(?FILE),
-    {ok, Filenames} = file:list_dir(Path),
-    register_modules([list_to_existing_atom(filename:rootname(N))
-        || N <- Filenames, string:str(N, "enc_") =:= 1]).
-
-%%
-%% @doc Register modules
-%%
-register_modules([]) ->
-    ok;
-register_modules([Module | Modules]) ->
-    register_module(Module),
-    register_modules(Modules).
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 
 %%
@@ -148,12 +136,8 @@ stop() ->
 init([]) ->
     process_flag(trap_exit, true),
     ets:new(?MODULE, [set, private, named_table]),
+    gen_server:cast(?MODULE, register_builtin_modules),
     {ok, none}.
-
-handle_cast(stop, State) ->
-    {stop, normal, State};
-handle_cast(_Msg, State) ->
-    {noreply, State}.
 
 terminate(_Reason, _State) ->
     ets:delete(?MODULE),
@@ -166,6 +150,15 @@ code_change(_OldVsn, State, _Extra) ->
 %%
 %% Message handling
 %%
+
+handle_cast(register_builtin_modules, State) ->
+    register_builtin_modules(),
+    {noreply, State};
+handle_cast(stop, State) ->
+    {stop, normal, State};
+handle_cast(_Msg, State) ->
+    {noreply, State}.
+
 
 handle_info(_Info, State) ->
     {noreply, State}.
@@ -181,9 +174,7 @@ handle_call({get_encoder_decoder, Encoding}, _From, State) ->
     end,
     {reply, Result, State};
 handle_call({register_module, Module}, _From, State) ->
-    Encoder = fun (U) -> Module:encode(U) end,
-    Decoder = fun (S) -> Module:decode(S) end,
-    {reply, register_encoding(Module:aliases(), Encoder, Decoder), State};
+    {reply, register_module_internally(Module), State};
 handle_call({register_encoder_decoder, Encodings, Encoder, Decoder},
         _From, State) ->
     {reply, register_encoding(Encodings, Encoder, Decoder), State};
@@ -191,6 +182,38 @@ handle_call(_, _, State) ->
     {reply, badarg, State}.
 
 
+%%
+%% Auxiliary functions
+%%
+
+%%
+%% @doc Register builtin modules
+%%
+register_builtin_modules() ->
+    Path = filename:dirname(?FILE),
+    {ok, Filenames} = file:list_dir(Path),
+    register_builtin_modules([list_to_existing_atom(filename:rootname(N))
+        || N <- Filenames, string:str(N, "enc_") =:= 1]).
+
+register_builtin_modules([]) ->
+    ok;
+register_builtin_modules([Module | Modules]) ->
+    register_module_internally(Module),
+    register_builtin_modules(Modules).
+
+
+%%
+%% @doc Register module
+%%
+register_module_internally(Module) ->
+    Encoder = fun (U) -> Module:encode(U) end,
+    Decoder = fun (S) -> Module:decode(S) end,
+    register_encoding(Module:aliases(), Encoder, Decoder).
+
+
+%%
+%% @doc Register encoder/decoder
+%%
 register_encoding([], _, _) ->
     ok;
 register_encoding([Encoding | Encodings], Encoder, Decoder) ->
