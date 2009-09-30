@@ -2,6 +2,4 @@
 
 - Split key encoding name and aliases
 
-- Add interface to register encoder/decoder as functions
-
 - Do we need unregister function?
