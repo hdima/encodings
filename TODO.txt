@@ -6,7 +6,5 @@
 - Do we need unregister function? We need to store all aliases for each
   encoding to remove them all if needed
 
-- Add an option to completely remove all aliases on unregister
-
 - Instantiate standard encoding modules on server start through asynchronous
   message?
