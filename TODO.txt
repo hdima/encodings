@@ -1,2 +1,4 @@
 - Add option 'override' to register_module/register_encoder_decoder and return
   error if encoding already defined and no option given
+
+- print error and exit if builtin encodings contain duplicates

@@ -66,8 +66,12 @@ behaviour_info(_Other) ->
 %%      String = binary()
 %%
 encode(Unicode, Encoding) ->
-    {ok, Encoder, _} = get_encoder_decoder(Encoding),
-    Encoder(Unicode).
+    case get_encoder_decoder(Encoding) of
+        {ok, Encoder, _Decoder} ->
+            Encoder(Unicode);
+        {error, Reason} ->
+            erlang:error(Reason)
+    end.
 
 %%
 %% @doc Decode binary String to Unicode with Encoding
@@ -77,8 +81,13 @@ encode(Unicode, Encoding) ->
 %%      Unicode = string()
 %%
 decode(String, Encoding) ->
-    {ok, _, Decoder} = get_encoder_decoder(Encoding),
-    Decoder(String).
+    case get_encoder_decoder(Encoding) of
+        {ok, _Encoder, Decoder} ->
+            Decoder(String);
+        {error, Reason} ->
+            erlang:error(Reason)
+    end.
+
 
 %%
 %% @doc Return encoder and decoder for the encoding
@@ -92,8 +101,8 @@ get_encoder_decoder(Encoding) ->
     gen_server:call(?MODULE, {get_encoder_decoder, Encoding}).
 
 %%
-%% @doc Register callback module
-%% @spec register_module(Module) -> ok
+%% @doc Register callback module and return true on success
+%% @spec register_module(Module) -> bool()
 %%      Module = module()
 %%
 register_module(Module) ->
@@ -110,8 +119,8 @@ unregister_module(Module) ->
 
 
 %%
-%% @doc Register encoder and decoder as functions
-%% @spec register_encoder_decoder(Encodings, Encoder, Decoder) -> ok
+%% @doc Register encoder and decoder as functions and return true on success
+%% @spec register_encoder_decoder(Encodings, Encoder, Decoder) -> true
 %%      Encodings = [Encoding]
 %%      Encoding = string() | atom()
 %%      Encoder = function()
@@ -258,14 +267,9 @@ unregister_module_internally(Module, RE) ->
 %% @doc Register encoder/decoder
 %%
 register_encoding(Aliases, Encoder, Decoder, RE) ->
-    register_encoding(Aliases, Aliases, Encoder, Decoder, RE).
-
-register_encoding([], _Aliases, _Encoder, _Decoder, _RE) ->
-    ok;
-register_encoding([Encoding | Encodings], Aliases, Encoder, Decoder, RE) ->
-    E = normalize_encoding_name(Encoding, RE),
-    ets:insert(?MODULE, {E, Aliases, {Encoder, Decoder}}),
-    register_encoding(Encodings, Aliases, Encoder, Decoder, RE).
+    ets:insert_new(?MODULE,
+        [{normalize_encoding_name(E, RE), Aliases, {Encoder, Decoder}} ||
+        E <- Aliases]).
 
 
 %%
