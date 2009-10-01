@@ -268,8 +268,14 @@ register_builtin_modules(RE) ->
 register_builtin_modules([], _) ->
     ok;
 register_builtin_modules([Module | Modules], RE) ->
-    register_module_internally(Module, RE),
-    register_builtin_modules(Modules, RE).
+    case register_module_internally(Module, RE) of
+        true ->
+            register_builtin_modules(Modules, RE);
+        false ->
+            error_logger:format(
+                "Duplicate encoding alias in module ~p~n", [Module]),
+            erlang:error(badarg)
+    end.
 
 
 %%
