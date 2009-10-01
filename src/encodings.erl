@@ -52,7 +52,8 @@
 
 %% Public interface
 -export([encode/2, decode/2, get_encoder_decoder/1,
-    register_module/1, register_encoder_decoder/3,
+    register_module/1, register_module/2,
+    register_encoder_decoder/3, register_encoder_decoder/4,
     unregister_module/1, unregister_encoding/1,
     start/0, start_link/0, stop/0]).
 
@@ -131,7 +132,13 @@ get_encoder_decoder(Encoding) ->
 %%      Module = module()
 %%
 register_module(Module) ->
-    gen_server:call(?MODULE, {register_module, Module}).
+    register_module(Module, []).
+
+
+register_module(Module, []) ->
+    gen_server:call(?MODULE, {register_module, Module, []});
+register_module(Module, [override]) ->
+    gen_server:call(?MODULE, {register_module, Module, [override]}).
 
 
 %%
@@ -152,8 +159,14 @@ unregister_module(Module) ->
 %%      Decoder = function()
 %%
 register_encoder_decoder(Encodings, Encoder, Decoder) ->
+    register_encoder_decoder(Encodings, Encoder, Decoder, []).
+
+register_encoder_decoder(Encodings, Encoder, Decoder, []) ->
     gen_server:call(?MODULE, {register_encoder_decoder,
-        Encodings, Encoder, Decoder}).
+        Encodings, Encoder, Decoder, []});
+register_encoder_decoder(Encodings, Encoder, Decoder, [override]) ->
+    gen_server:call(?MODULE, {register_encoder_decoder,
+        Encodings, Encoder, Decoder, [override]}).
 
 
 %%
@@ -227,13 +240,13 @@ handle_call({get_encoder_decoder, Encoding}, _From, RE) ->
             {error, badarg}
     end,
     {reply, Result, RE};
-handle_call({register_module, Module}, _From, RE) ->
-    {reply, register_module_internally(Module, RE), RE};
+handle_call({register_module, Module, Options}, _From, RE) ->
+    {reply, register_module_internally(Module, Options, RE), RE};
 handle_call({unregister_module, Module}, _From, RE) ->
     {reply, unregister_module_internally(Module, RE), RE};
-handle_call({register_encoder_decoder, Encodings, Encoder, Decoder},
+handle_call({register_encoder_decoder, Encodings, Encoder, Decoder, Options},
         _From, RE) ->
-    {reply, register_encoding(Encodings, Encoder, Decoder, RE), RE};
+    {reply, register_encoding(Encodings, Encoder, Decoder, Options, RE), RE};
 handle_call({unregister_encoding, Encoding}, _From, RE) ->
     {reply, unregister_encoding_internally(Encoding, RE), RE};
 handle_call(_, _, State) ->
@@ -268,7 +281,7 @@ register_builtin_modules(RE) ->
 register_builtin_modules([], _) ->
     ok;
 register_builtin_modules([Module | Modules], RE) ->
-    case register_module_internally(Module, RE) of
+    case register_module_internally(Module, [], RE) of
         true ->
             register_builtin_modules(Modules, RE);
         false ->
@@ -281,10 +294,11 @@ register_builtin_modules([Module | Modules], RE) ->
 %%
 %% @doc Register module
 %%
-register_module_internally(Module, RE) ->
+register_module_internally(Module, Options, RE) ->
     Encoder = fun (U) -> Module:encode(U) end,
     Decoder = fun (S) -> Module:decode(S) end,
-    register_encoding(Module:aliases(), Encoder, Decoder, RE).
+    Aliases = Module:aliases(),
+    register_encoding(Aliases, Encoder, Decoder, Options, RE).
 
 
 %%
@@ -297,10 +311,15 @@ unregister_module_internally(Module, RE) ->
 %%
 %% @doc Register encoder/decoder
 %%
-register_encoding(Aliases, Encoder, Decoder, RE) ->
-    ets:insert_new(?MODULE,
-        [{normalize_encoding_name(E, RE), Aliases, {Encoder, Decoder}} ||
-        E <- Aliases]).
+register_encoding(Aliases, Encoder, Decoder, Options, RE) ->
+    Info = [{normalize_encoding_name(E, RE), Aliases, {Encoder, Decoder}} ||
+        E <- Aliases],
+    case Options of
+        [override] ->
+            ets:insert(?MODULE, Info);
+        [] ->
+            ets:insert_new(?MODULE, Info)
+    end.
 
 
 %%
