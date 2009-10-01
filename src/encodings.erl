@@ -126,6 +126,7 @@ decode(String, Encoding) ->
 get_encoder_decoder(Encoding) ->
     gen_server:call(?MODULE, {get_encoder_decoder, Encoding}).
 
+
 %%
 %% @doc Register callback module and return true on success
 %% @spec register_module(Module) -> bool()
@@ -135,10 +136,20 @@ register_module(Module) ->
     register_module(Module, []).
 
 
-register_module(Module, []) ->
-    gen_server:call(?MODULE, {register_module, Module, []});
-register_module(Module, [override]) ->
-    gen_server:call(?MODULE, {register_module, Module, [override]}).
+%%
+%% @doc Register callback module with options
+%% @spec register_module(Module, Options) -> bool()
+%%      Module = module()
+%%      Options = [] | [override]
+%%
+register_module(Module, Options) ->
+    Info = {register_module, Module, Options},
+    case Options of
+        [] ->
+            gen_server:call(?MODULE, Info);
+        [override] ->
+            gen_server:call(?MODULE, Info)
+    end.
 
 
 %%
@@ -161,12 +172,24 @@ unregister_module(Module) ->
 register_encoder_decoder(Encodings, Encoder, Decoder) ->
     register_encoder_decoder(Encodings, Encoder, Decoder, []).
 
-register_encoder_decoder(Encodings, Encoder, Decoder, []) ->
-    gen_server:call(?MODULE, {register_encoder_decoder,
-        Encodings, Encoder, Decoder, []});
-register_encoder_decoder(Encodings, Encoder, Decoder, [override]) ->
-    gen_server:call(?MODULE, {register_encoder_decoder,
-        Encodings, Encoder, Decoder, [override]}).
+
+%%
+%% @doc Register encoder and decoder with options
+%% @spec register_encoder_decoder(Encodings, Encoder, Decoder, Options) -> true
+%%      Encodings = [Encoding]
+%%      Encoding = string() | atom()
+%%      Encoder = function()
+%%      Decoder = function()
+%%      Options = [] | [override]
+%%
+register_encoder_decoder(Encodings, Encoder, Decoder, Options) ->
+    Info = {register_encoder_decoder, Encodings, Encoder, Decoder, Options},
+    case Options of
+        [] ->
+            gen_server:call(?MODULE, Info);
+        [override] ->
+            gen_server:call(?MODULE, Info)
+    end.
 
 
 %%
