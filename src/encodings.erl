@@ -27,6 +27,27 @@
 %%
 %% @doc Encodings
 %%
+%% Callback module interface:
+%%
+%% <pre>
+%%      aliases() -> [Alias]
+%%          Alias = atom() | string()
+%%
+%%      encode(Unicode) -> Result
+%%          Unicode = string()
+%%          Result = binary() | {error, Encoded, Rest}
+%%              | {incomplete, Encoded, Rest}
+%%          Encoded = binary()
+%%          Rest = string()
+%%
+%%      decode(String) -> Result
+%%          String = binary()
+%%          Result = string() | {error, Decoded, Rest}
+%%              | {incomplete, Decoded, Rest}
+%%          Decoded = string()
+%%          Rest = binary()
+%% </pre>
+%%
 -module(encodings).
 
 %% Public interface
@@ -60,10 +81,12 @@ behaviour_info(_Other) ->
 
 %%
 %% @doc Encode Unicode to binary string with Encoding
-%% @spec encode(Unicode, Encoding) -> String
+%% @spec encode(Unicode, Encoding) -> Result
 %%      Unicode = string()
-%%      Encoding = string() | atom()
-%%      String = binary()
+%%      Result = binary() | {error, Encoded, Rest}
+%%          | {incomplete, Encoded, Rest}
+%%      Encoded = binary()
+%%      Rest = string()
 %%
 encode(Unicode, Encoding) ->
     case get_encoder_decoder(Encoding) of
@@ -75,10 +98,12 @@ encode(Unicode, Encoding) ->
 
 %%
 %% @doc Decode binary String to Unicode with Encoding
-%% @spec decode(String, Encoding) -> Unicode
+%% @spec decode(String, Encoding) -> Result
 %%      String = binary()
-%%      Encoding = string() | atom()
-%%      Unicode = string()
+%%      Result = string() | {error, Decoded, Rest}
+%%          | {incomplete, Decoded, Rest}
+%%      Decoded = string()
+%%      Rest = binary()
 %%
 decode(String, Encoding) ->
     case get_encoder_decoder(Encoding) of
