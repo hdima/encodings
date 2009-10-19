@@ -1,1 +1,5 @@
+- Trap exit on encodings server start
+
+- Place *.app into ebin/
+
 - Check interface for consistency
