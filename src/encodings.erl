@@ -296,10 +296,12 @@ normalize_encoding_name(Name, _) ->
 %% @doc Register builtin modules
 %%
 register_builtin_modules(RE) ->
-    Path = filename:dirname(?FILE),
-    {ok, Filenames} = file:list_dir(Path),
-    register_builtin_modules([list_to_existing_atom(filename:rootname(N))
-        || N <- Filenames, string:str(N, "enc_") =:= 1], RE).
+    register_builtin_modules([
+        enc_ascii,
+        enc_cp1251,
+        enc_iso8859_1,
+        enc_utf8
+        ], RE).
 
 register_builtin_modules([], _) ->
     ok;
