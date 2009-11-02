@@ -25,9 +25,10 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-all: compile
+BEAMS=$(patsubst src/%.erl,ebin/%.beam,$(wildcard src/*.erl))
 
-compile: behaviours $(patsubst src/%.erl,ebin/%.beam,$(wildcard src/*.erl))
+
+compile: behaviours $(BEAMS)
 
 behaviours: ebin/encodings.beam
 
