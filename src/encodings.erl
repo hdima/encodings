@@ -296,12 +296,10 @@ normalize_encoding_name(Name, _) ->
 %% @doc Register builtin modules
 %%
 register_builtin_modules(RE) ->
-    register_builtin_modules([
-        enc_ascii,
-        enc_cp1251,
-        enc_iso8859_1,
-        enc_utf8
-        ], RE).
+    application:load(encodings),
+    {ok, Modules} = application:get_key(encodings, modules),
+    register_builtin_modules([N || N <- Modules,
+        string:str(atom_to_list(N), "enc_") =:= 1], RE).
 
 register_builtin_modules([], _) ->
     ok;
