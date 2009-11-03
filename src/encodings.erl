@@ -312,7 +312,7 @@ register_builtin_modules([Module | Modules], RE) ->
         false ->
             error_logger:format(
                 "Duplicate encoding alias in module ~p~n", [Module]),
-            erlang:error(badarg)
+            register_builtin_modules(Modules, RE)
     end.
 
 
