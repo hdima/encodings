@@ -1,3 +1,5 @@
+- Lowercase encoding names
+
 - Trap exit on encodings server start
 
 - Check interface for consistency
