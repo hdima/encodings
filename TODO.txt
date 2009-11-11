@@ -1,3 +1,6 @@
+- We can lookup encoder/decoder in client code open database with 'protected'
+  flag
+
 - Lowercase encoding names
 
 - Trap exit on encodings server start
