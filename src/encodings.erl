@@ -65,7 +65,7 @@
     terminate/2, code_change/3]).
 
 %% RE of symbols which need to be ignored in encoding name
--define(IGNORE_IN_NAMES, "[ -_.]+").
+-define(IGNORE_IN_NAMES, "[- _.]+").
 
 
 %%
@@ -288,7 +288,8 @@ handle_call(_, _, State) ->
 %%      NewName = string()
 %%
 normalize_encoding_name(Name, RE) when is_list(Name) ->
-    re:replace(Name, RE, "", [global, {return, list}]);
+    Replaced = re:replace(Name, RE, "", [global, {return, list}]),
+    string:to_lower(Replaced);
 normalize_encoding_name(Name, _) ->
     Name.
 
