@@ -1,6 +1,4 @@
 - We can lookup encoder/decoder in client code open database with 'protected'
   flag
 
-- Trap exit on encodings server start
-
 - Check interface for consistency
