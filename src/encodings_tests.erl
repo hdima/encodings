@@ -28,6 +28,8 @@
 %% @doc Tests
 %%
 -module(encodings_tests).
+-author("Dmitry Vasiliev <dima@hlabs.spb.ru>").
+-vsn("0.1").
 
 -include_lib("eunit/include/eunit.hrl").
 

@@ -28,6 +28,8 @@
 %% @doc ASCII encoding
 %%
 -module(enc_ascii).
+-author("Dmitry Vasiliev <dima@hlabs.spb.ru>").
+-vsn("0.1").
 
 -behaviour(encodings).
 

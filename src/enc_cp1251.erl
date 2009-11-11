@@ -28,6 +28,8 @@
 %% @doc CP1251 encoding
 %%
 -module(enc_cp1251).
+-author("Dmitry Vasiliev <dima@hlabs.spb.ru>").
+-vsn("0.1").
 
 -behaviour(encodings).
 

@@ -49,6 +49,8 @@
 %% </pre>
 %%
 -module(encodings).
+-author("Dmitry Vasiliev <dima@hlabs.spb.ru>").
+-vsn("0.1").
 
 %% Public interface
 -export([encode/2, decode/2, get_encoder_decoder/1,

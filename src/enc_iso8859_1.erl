@@ -28,6 +28,8 @@
 %% @doc ISO 8859-1 encoding
 %%
 -module(enc_iso8859_1).
+-author("Dmitry Vasiliev <dima@hlabs.spb.ru>").
+-vsn("0.1").
 
 -behaviour(encodings).
 

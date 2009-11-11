@@ -28,6 +28,8 @@
 %% @doc UTF-8 encoding
 %%
 -module(enc_utf8).
+-author("Dmitry Vasiliev <dima@hlabs.spb.ru>").
+-vsn("0.1").
 
 -behaviour(encodings).
 
