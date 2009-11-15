@@ -25,17 +25,31 @@
 %% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 %% POSSIBILITY OF SUCH DAMAGE.
 %%
-{application, encodings,
-    [{description, "Encodings"},
-     {vsn, "0.2"},
-     {modules, [
-        encodings_sup,
-        encodings,
-        enc_ascii,
-        enc_utf8,
-        enc_iso8859_1,
-        enc_cp1251
-        ]},
-     {registered, [encodings]},
-     {applications, [kernel, stdlib]}
-     ]}.
+%% @doc Encodings supervisor
+%%
+-module(encodings_sup).
+-author("Dmitry Vasiliev <dima@hlabs.spb.ru>").
+-vsn("0.1").
+
+-behaviour(supervisor).
+
+%% Public interface
+-export([start_link/1]).
+
+%% Behaviour callbacks
+-export([init/1]).
+
+
+start_link(Args) ->
+    supervisor:start_link({local, ?MODULE}, ?MODULE, Args).
+
+
+init([]) ->
+    {ok, {{one_for_one, 3, 10},
+        [{encodings,
+            {channel, start_link, []},
+            permanent,
+            5000,
+            worker,
+            [encodings]}
+        ]}}.

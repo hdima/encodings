@@ -252,6 +252,8 @@ handle_cast(_Msg, State) ->
     {noreply, State}.
 
 
+handle_info({'EXIT', _, shutdown}, State) ->
+    {stop, normal, State};
 handle_info(_Info, State) ->
     {noreply, State}.
 

@@ -1,11 +1,7 @@
 General
 -------
 
-- Add copyright and registered processes to .app file
-
 - We can lookup encoder/decoder in client code open database with 'protected'
   flag?
 
 - Check interface for consistency
-
-- Add supervisor
