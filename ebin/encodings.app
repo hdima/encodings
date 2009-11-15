@@ -34,6 +34,7 @@
         enc_ascii,
         enc_utf8,
         enc_iso8859_1,
+        enc_iso8859_5,
         enc_cp1251,
         enc_cp866,
         enc_koi8r
