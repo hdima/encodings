@@ -34,7 +34,8 @@
         enc_ascii,
         enc_utf8,
         enc_iso8859_1,
-        enc_cp1251
+        enc_cp1251,
+        enc_cp866
         ]},
      {registered, [encodings]},
      {applications, [kernel, stdlib]}

@@ -162,7 +162,8 @@ encodings_test_() -> {setup, fun setup/0, fun cleanup/1, [
     ?_assert(test_encoding([iso8859_1, "iso-88591", latin1, "latin-1"],
         "iso8859-1.txt")),
     ?_assert(test_encoding([cp1251, windows1251, "cp_1251", "windows 1251"],
-        "cp1251.txt"))
+        "cp1251.txt")),
+    ?_assert(test_encoding([cp866, "cp866"], "cp866.txt"))
     ]}.
 
 
