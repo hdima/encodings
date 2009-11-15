@@ -45,7 +45,7 @@ test_encoding(Aliases, Filename) ->
     test_encode_decode(Alias, Bytes, Unicode),
     test_errors(DecoderErrors, fun (I) -> encodings:decode(I, Alias) end),
     test_errors(EncoderErrors, fun (I) -> encodings:encode(I, Alias) end),
-    true.
+    ok.
 
 
 test_aliases([Alias | Aliases]) ->
@@ -105,7 +105,7 @@ test_utf8(Aliases) ->
         16#f4, 16#8f, 16#bf, 16#bf>>,
     Unicode = [0, 16#7f, 16#80, 16#7ff, 16#800, 16#fffd, 16#10000, 16#10ffff],
     test_encode_decode(hd(Aliases), Bytes, Unicode),
-    true.
+    ok.
 
 
 test_register_unregister_encoding() ->
@@ -122,7 +122,7 @@ test_register_unregister_encoding() ->
     "Decoded String" = Decoder("String"),
     encodings:unregister_encoding("encoding"),
     {error, badarg} = encodings:get_encoder_decoder("encoding"),
-    true.
+    ok.
 
 
 test_register_unregister_module() ->
@@ -131,7 +131,7 @@ test_register_unregister_module() ->
     {error, badarg} = encodings:get_encoder_decoder("ascii"),
     encodings:register_module(enc_ascii),
     {ok, Encoder, Decoder} = encodings:get_encoder_decoder("ascii"),
-    true.
+    ok.
 
 
 test_registration_override() ->
@@ -143,7 +143,7 @@ test_registration_override() ->
     {ok, Encoder, Decoder} = encodings:get_encoder_decoder("ascii"),
     "Encoded Unicode" = Encoder("Unicode"),
     "Decoded String" = Decoder("String"),
-    true.
+    ok.
 
 
 %%
@@ -158,25 +158,25 @@ cleanup(_) ->
 
 
 encodings_test_() -> {setup, fun setup/0, fun cleanup/1, [
-    ?_assert(test_encoding([ascii, "ascii", "ASCII"], "ascii.txt")),
-    ?_assert(test_encoding([iso8859_1, "iso-88591", latin1, "latin-1"],
-        "iso8859-1.txt")),
-    ?_assert(test_encoding([cp1251, windows1251, "cp_1251", "windows 1251"],
-        "cp1251.txt")),
-    ?_assert(test_encoding([cp866, "cp866"], "cp866.txt")),
-    ?_assert(test_encoding([koi8r, "koi8r", "KOI8-R"], "koi8-r.txt")),
-    ?_assert(test_encoding([iso8859_5, "iso8859-5", latin5, "latin-5"],
-        "iso8859-5.txt"))
+    ?_assertEqual(ok, test_encoding([ascii, "ascii", "ASCII"], "ascii.txt")),
+    ?_assertEqual(ok, test_encoding(
+        [iso8859_1, "iso-88591", latin1, "latin-1"], "iso8859-1.txt")),
+    ?_assertEqual(ok, test_encoding(
+        [cp1251, windows1251, "cp_1251", "windows 1251"], "cp1251.txt")),
+    ?_assertEqual(ok, test_encoding([cp866, "cp866"], "cp866.txt")),
+    ?_assertEqual(ok, test_encoding([koi8r, "koi8r", "KOI8-R"], "koi8-r.txt")),
+    ?_assertEqual(ok, test_encoding(
+        [iso8859_5, "iso8859-5", latin5, "latin-5"], "iso8859-5.txt"))
     ]}.
 
 
 registration_test_() -> {setup, fun setup/0, fun cleanup/1, [
-    ?_assert(test_register_unregister_encoding()),
-    ?_assert(test_register_unregister_module()),
-    ?_assert(test_registration_override())
+    ?_assertEqual(ok, test_register_unregister_encoding()),
+    ?_assertEqual(ok, test_register_unregister_module()),
+    ?_assertEqual(ok, test_registration_override())
     ]}.
 
 
 utf8_test_() -> {setup, fun setup/0, fun cleanup/1, [
-    ?_assert(test_utf8([utf8, "utf8"]))
+    ?_assertEqual(ok, test_utf8([utf8, "utf8"]))
     ]}.
