@@ -1,6 +1,8 @@
 General
 -------
 
+- Rewrite all decode functions as element(C + 1, {Characters})
+
 - We can lookup encoder/decoder in client code open database with 'protected'
   flag?
 
