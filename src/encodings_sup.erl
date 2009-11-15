@@ -47,7 +47,7 @@ start_link(Args) ->
 init([]) ->
     {ok, {{one_for_one, 3, 10},
         [{encodings,
-            {channel, start_link, []},
+            {encodings, start_link, []},
             permanent,
             5000,
             worker,
