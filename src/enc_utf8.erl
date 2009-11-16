@@ -46,12 +46,12 @@ aliases() ->
 %%
 %% @doc Encode Unicode to UTF-8 string
 %%
-encode(Unicode) ->
+encode(Unicode) when is_list(Unicode) ->
     unicode:characters_to_binary(Unicode, utf32, utf8).
 
 
 %%
 %% @doc Decode UTF-8 string to Unicode
 %%
-decode(String) ->
+decode(String) when is_binary(String) ->
     unicode:characters_to_list(String, utf8).
