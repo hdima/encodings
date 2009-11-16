@@ -17,19 +17,8 @@ decode(<<C,Tail/binary>>=Input, Result) ->
     end.
 
 
-decode2(String) ->
-    decode2(String, "").
-
-decode2(<<>>, Result) ->
-    lists:reverse(Result);
-decode2(<<C,Tail/binary>>=Input, Result) ->
-    try decode_char2(C) of
-        D ->
-            decode2(Tail, [D | Result])
-    catch
-        error:badarg ->
-            {error, lists:reverse(Result), Input}
-    end.
+decode2(String) when is_binary(String) ->
+    [decode_char2(C) || C <- binary_to_list(String)].
 
 
 decode_char(C) when C >= 0, C =< 16#7f -> C;
