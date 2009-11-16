@@ -3,6 +3,8 @@ General
 
 - Rewrite all decode functions as element(C + 1, {Characters})
 
+- Add error policies ("strict", "ignore"...)
+
 - We can lookup encoder/decoder in client code open database with 'protected'
   flag?
 
