@@ -46,7 +46,7 @@ aliases() ->
 %%
 %% @doc Encode Unicode to ASCII string
 %%
-encode(Unicode) ->
+encode(Unicode) when is_list(Unicode) ->
     encode(Unicode, <<>>).
 
 encode("", Result) ->
@@ -60,7 +60,7 @@ encode(Input, Result) ->
 %%
 %% @doc Decode ASCII string to Unicode
 %%
-decode(String) ->
+decode(String) when is_binary(String) ->
     decode(String, "").
 
 decode(<<>>, Result) ->
