@@ -87,9 +87,9 @@ read_tests([{decode, Error} | Tail],
 read_tests([{encode, Error} | Tail],
         String, Unicode, DecodeErrors, EncodeErrors) ->
     read_tests(Tail, String, Unicode, DecodeErrors, [Error | EncodeErrors]);
-read_tests([{Bytes, Char} | Tail],
+read_tests([{Byte, Char} | Tail],
         String, Unicode, DecodeErrors, EncodeErrors) ->
-    read_tests(Tail, <<String/binary,Bytes/binary>>,
+    read_tests(Tail, <<String/binary,Byte>>,
         [Char | Unicode], DecodeErrors, EncodeErrors).
 
 
