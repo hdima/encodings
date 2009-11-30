@@ -33,6 +33,8 @@
 
 -behaviour(encodings).
 
+-compile({inline, [encode_char/1, decode_char/1]}).
+
 -export([aliases/0, encode/1, decode/1]).
 
 
