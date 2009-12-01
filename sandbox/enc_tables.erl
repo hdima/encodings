@@ -35,7 +35,7 @@ group([{H, _}=I | Tail]) ->
 
 group([{H, _}=I | Tail], {H, O}, H, Acc) ->
     group(Tail, [I, O], H, Acc);
-group([{H, _}=I | Tail], [{H, OI} | _]=O, H, Acc) ->
+group([{H, _}=I | Tail], [{H, OI} | O], H, Acc) ->
     group(Tail, [I, OI | O], H, Acc);
 group([{H, _}=I | Tail], A, _, Acc) when is_tuple(A) ->
     group(Tail, I, H, [A | Acc]);
