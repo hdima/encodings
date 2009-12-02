@@ -1,2 +1,17 @@
 Erlang character encodings library
 ==================================
+
+*WARNING*: Pre-alpha version, work in progress
+
+Simple to use character encodings library for Erlang. Require at least Erlang
+R13B. Usage examples:
+
+ 1> encodings:start().
+ {ok,<0.35.0>}
+ 2> % Russian for "test":
+ 2> U = "тест".
+ [1090,1077,1089,1090]
+ 3> S = encodings:encode(U, utf8).     
+ <<209,130,208,181,209,129,209,130>>
+ 4> U = encodings:decode(S, utf8).
+ [1090,1077,1089,1090]
