@@ -36,13 +36,16 @@ ebin/%.beam: src/%.erl
 	erlc -Wall -pa ebin -o ebin/ $<
 
 test: compile
-	erl -noshell -pa ebin -s encodings_app test -s init stop
+	erl -noshell -pa ebin \
+		-eval 'eunit:test({application, encodings}, [])' -s init stop
 
 test-verbose: compile
-	erl -noshell -pa ebin -s encodings_app test verbose -s init stop
+	erl -noshell -pa ebin \
+		-eval 'eunit:test({application, encodings}, [verbose])' -s init stop
 
 doc: compile
-	erl -noshell -pa ebin -s encodings_app generate_docs -s init stop
+	erl -noshell -pa ebin \
+		-eval 'edoc:application(encodings, "src", [])' -s init stop
 
 check:
 	dialyzer --src -c src
