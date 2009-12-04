@@ -148,14 +148,8 @@ register_module(Module) ->
 %%      Module = module()
 %%      Options = [] | [override]
 %%
-register_module(Module, Options) ->
-    Info = {register_module, Module, Options},
-    case Options of
-        [] ->
-            gen_server:call(?MODULE, Info);
-        [override] ->
-            gen_server:call(?MODULE, Info)
-    end.
+register_module(Module, Opts) when Opts =:= []; Opts =:= [override] ->
+    gen_server:call(?MODULE, {register_module, Module, Opts}).
 
 
 %%
@@ -188,14 +182,9 @@ register(Encodings, Encoder, Decoder) ->
 %%      Decoder = function()
 %%      Options = [] | [override]
 %%
-register(Encodings, Encoder, Decoder, Options) ->
-    Info = {register, Encodings, Encoder, Decoder, Options},
-    case Options of
-        [] ->
-            gen_server:call(?MODULE, Info);
-        [override] ->
-            gen_server:call(?MODULE, Info)
-    end.
+register(Encodings, Encoder, Decoder, Opts)
+        when Opts =:= []; Opts =:= [override] ->
+    gen_server:call(?MODULE, {register, Encodings, Encoder, Decoder, Opts}).
 
 
 %%
