@@ -3,6 +3,7 @@
 *.P
 *.E
 *.swp
+erl_crash.dump
 /src/doc/*.html
 /src/doc/*.css
 /src/doc/*.png
