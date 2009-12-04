@@ -3,7 +3,7 @@
 *.P
 *.E
 *.swp
-src/doc/*.html
-src/doc/*.css
-src/doc/*.png
-src/doc/edoc-info
+/src/doc/*.html
+/src/doc/*.css
+/src/doc/*.png
+/src/doc/edoc-info
