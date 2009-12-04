@@ -54,9 +54,8 @@
 
 %% Public interface
 -export([encode/2, decode/2, get_encoder_decoder/1,
-    register_module/1, register_module/2,
-    register_encoder_decoder/3, register_encoder_decoder/4,
-    unregister_module/1, unregister_encoding/1,
+    register/3, register/4, unregister/1,
+    register_module/1, register_module/2, unregister_module/1,
     start/0, start_link/0, stop/0]).
 
 %% Behaviour information
@@ -165,27 +164,27 @@ unregister_module(Module) ->
 
 %%
 %% @doc Register encoder and decoder as functions and return true on success
-%% @spec register_encoder_decoder(Encodings, Encoder, Decoder) -> true
+%% @spec register(Encodings, Encoder, Decoder) -> true
 %%      Encodings = [Encoding]
 %%      Encoding = string() | atom()
 %%      Encoder = function()
 %%      Decoder = function()
 %%
-register_encoder_decoder(Encodings, Encoder, Decoder) ->
-    register_encoder_decoder(Encodings, Encoder, Decoder, []).
+register(Encodings, Encoder, Decoder) ->
+    register(Encodings, Encoder, Decoder, []).
 
 
 %%
 %% @doc Register encoder and decoder with options
-%% @spec register_encoder_decoder(Encodings, Encoder, Decoder, Options) -> true
+%% @spec register(Encodings, Encoder, Decoder, Options) -> true
 %%      Encodings = [Encoding]
 %%      Encoding = string() | atom()
 %%      Encoder = function()
 %%      Decoder = function()
 %%      Options = [] | [override]
 %%
-register_encoder_decoder(Encodings, Encoder, Decoder, Options) ->
-    Info = {register_encoder_decoder, Encodings, Encoder, Decoder, Options},
+register(Encodings, Encoder, Decoder, Options) ->
+    Info = {register, Encodings, Encoder, Decoder, Options},
     case Options of
         [] ->
             gen_server:call(?MODULE, Info);
@@ -196,11 +195,11 @@ register_encoder_decoder(Encodings, Encoder, Decoder, Options) ->
 
 %%
 %% @doc Unregister encoding
-%% @spec unregister_encoding(Encoding) -> ok
+%% @spec unregister(Encoding) -> ok
 %%      Encoding = string() | atom()
 %%
-unregister_encoding(Encoding) ->
-    gen_server:call(?MODULE, {unregister_encoding, Encoding}).
+unregister(Encoding) ->
+    gen_server:call(?MODULE, {unregister, Encoding}).
 
 
 %%
@@ -272,11 +271,11 @@ handle_call({register_module, Module, Options}, _From, RE) ->
     {reply, register_module_internally(Module, Options, RE), RE};
 handle_call({unregister_module, Module}, _From, RE) ->
     {reply, unregister_module_internally(Module, RE), RE};
-handle_call({register_encoder_decoder, Encodings, Encoder, Decoder, Options},
+handle_call({register, Encodings, Encoder, Decoder, Options},
         _From, RE) ->
     {reply, register_encoding(Encodings, Encoder, Decoder, Options, RE), RE};
-handle_call({unregister_encoding, Encoding}, _From, RE) ->
-    {reply, unregister_encoding_internally(Encoding, RE), RE};
+handle_call({unregister, Encoding}, _From, RE) ->
+    {reply, unregister_internally(Encoding, RE), RE};
 handle_call(_, _, State) ->
     {reply, badarg, State}.
 
@@ -334,7 +333,7 @@ register_module_internally(Module, Options, RE) ->
 %% @doc Unregister module
 %%
 unregister_module_internally(Module, RE) ->
-    unregister_encoding_internally(hd(Module:aliases()), RE).
+    unregister_internally(hd(Module:aliases()), RE).
 
 
 %%
@@ -354,7 +353,7 @@ register_encoding(Aliases, Encoder, Decoder, Options, RE) ->
 %%
 %% @doc Unregister encoder/decoder
 %%
-unregister_encoding_internally(Encoding, RE) ->
+unregister_internally(Encoding, RE) ->
     E = normalize_encoding_name(Encoding, RE),
     case ets:lookup(?MODULE, E) of
         [] ->

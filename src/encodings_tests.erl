@@ -108,19 +108,18 @@ test_utf8(Aliases) ->
     ok.
 
 
-test_register_unregister_encoding() ->
-    encodings:unregister_encoding("encoding"),
+test_register_unregister() ->
+    encodings:unregister("encoding"),
     {error, badarg} = encodings:get_encoder_decoder("encoding"),
     Encoder = fun (U) -> "Encoded " ++ U end,
     Decoder = fun (S) -> "Decoded " ++ S end,
-    encodings:register_encoder_decoder(["encoding", "an encoding"],
-        Encoder, Decoder),
+    encodings:register(["encoding", "an encoding"], Encoder, Decoder),
     {ok, Encoder, Decoder} = encodings:get_encoder_decoder("encoding"),
     {ok, Encoder, Decoder} = encodings:get_encoder_decoder("anencoding"),
     {ok, Encoder, Decoder} = encodings:get_encoder_decoder("an encoding"),
     "Encoded Unicode" = Encoder("Unicode"),
     "Decoded String" = Decoder("String"),
-    encodings:unregister_encoding("encoding"),
+    encodings:unregister("encoding"),
     {error, badarg} = encodings:get_encoder_decoder("encoding"),
     ok.
 
@@ -137,9 +136,8 @@ test_register_unregister_module() ->
 test_registration_override() ->
     Encoder = fun (U) -> "Encoded " ++ U end,
     Decoder = fun (S) -> "Decoded " ++ S end,
-    false = encodings:register_encoder_decoder(["ascii"], Encoder, Decoder),
-    true = encodings:register_encoder_decoder(["ascii"], Encoder, Decoder,
-        [override]),
+    false = encodings:register(["ascii"], Encoder, Decoder),
+    true = encodings:register(["ascii"], Encoder, Decoder, [override]),
     {ok, Encoder, Decoder} = encodings:get_encoder_decoder("ascii"),
     "Encoded Unicode" = Encoder("Unicode"),
     "Decoded String" = Decoder("String"),
@@ -171,7 +169,7 @@ encodings_test_() -> {setup, fun setup/0, fun cleanup/1, [
 
 
 registration_test_() -> {setup, fun setup/0, fun cleanup/1, [
-    ?_assertEqual(ok, test_register_unregister_encoding()),
+    ?_assertEqual(ok, test_register_unregister()),
     ?_assertEqual(ok, test_register_unregister_module()),
     ?_assertEqual(ok, test_registration_override())
     ]}.
