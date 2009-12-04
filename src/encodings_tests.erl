@@ -49,20 +49,23 @@ test_encoding(Aliases, Filename) ->
 
 
 test_aliases([Alias | Aliases]) ->
-    {ok, Encoder, Decoder} = encodings:get_encoder_decoder(Alias),
+    {ok, Encoder} = encodings:getencoder(Alias),
+    {ok, Decoder} = encodings:getdecoder(Alias),
     test_aliases(Aliases, Encoder, Decoder).
 
 test_aliases([], _, _) ->
     true;
 test_aliases([Alias | Aliases], Encoder, Decoder) ->
-    {ok, Encoder, Decoder} = encodings:get_encoder_decoder(Alias),
+    {ok, Encoder} = encodings:getencoder(Alias),
+    {ok, Decoder} = encodings:getdecoder(Alias),
     test_aliases(Aliases, Encoder, Decoder).
 
 
 test_encode_decode(Alias, Bytes, Unicode) ->
     Unicode = encodings:decode(Bytes, Alias),
     Bytes = encodings:encode(Unicode, Alias),
-    {ok, Encoder, Decoder} = encodings:get_encoder_decoder(Alias),
+    {ok, Encoder} = encodings:getencoder(Alias),
+    {ok, Decoder} = encodings:getdecoder(Alias),
     Unicode = Decoder(Bytes),
     Bytes = Encoder(Unicode).
 
@@ -110,26 +113,31 @@ test_utf8(Aliases) ->
 
 test_register_unregister() ->
     encodings:unregister("encoding"),
-    {error, badarg} = encodings:get_encoder_decoder("encoding"),
+    {error, badarg} = encodings:getencoder("encoding"),
     Encoder = fun (U) -> "Encoded " ++ U end,
     Decoder = fun (S) -> "Decoded " ++ S end,
     encodings:register(["encoding", "an encoding"], Encoder, Decoder),
-    {ok, Encoder, Decoder} = encodings:get_encoder_decoder("encoding"),
-    {ok, Encoder, Decoder} = encodings:get_encoder_decoder("anencoding"),
-    {ok, Encoder, Decoder} = encodings:get_encoder_decoder("an encoding"),
+    {ok, Encoder} = encodings:getencoder("encoding"),
+    {ok, Decoder} = encodings:getdecoder("encoding"),
+    {ok, Encoder} = encodings:getencoder("anencoding"),
+    {ok, Decoder} = encodings:getdecoder("anencoding"),
+    {ok, Encoder} = encodings:getencoder("an encoding"),
+    {ok, Decoder} = encodings:getdecoder("an encoding"),
     "Encoded Unicode" = Encoder("Unicode"),
     "Decoded String" = Decoder("String"),
     encodings:unregister("encoding"),
-    {error, badarg} = encodings:get_encoder_decoder("encoding"),
+    {error, badarg} = encodings:getencoder("encoding"),
     ok.
 
 
 test_register_unregister_module() ->
-    {ok, Encoder, Decoder} = encodings:get_encoder_decoder("ascii"),
+    {ok, Encoder} = encodings:getencoder("ascii"),
+    {ok, Decoder} = encodings:getdecoder("ascii"),
     encodings:unregister_module(enc_ascii),
-    {error, badarg} = encodings:get_encoder_decoder("ascii"),
+    {error, badarg} = encodings:getencoder("ascii"),
     encodings:register_module(enc_ascii),
-    {ok, Encoder, Decoder} = encodings:get_encoder_decoder("ascii"),
+    {ok, Encoder} = encodings:getencoder("ascii"),
+    {ok, Decoder} = encodings:getdecoder("ascii"),
     ok.
 
 
@@ -138,7 +146,8 @@ test_registration_override() ->
     Decoder = fun (S) -> "Decoded " ++ S end,
     false = encodings:register(["ascii"], Encoder, Decoder),
     true = encodings:register(["ascii"], Encoder, Decoder, [override]),
-    {ok, Encoder, Decoder} = encodings:get_encoder_decoder("ascii"),
+    {ok, Encoder} = encodings:getencoder("ascii"),
+    {ok, Decoder} = encodings:getdecoder("ascii"),
     "Encoded Unicode" = Encoder("Unicode"),
     "Decoded String" = Decoder("String"),
     ok.

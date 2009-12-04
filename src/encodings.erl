@@ -54,6 +54,7 @@
 
 %% Public interface
 -export([encode/2, decode/2, get_encoder_decoder/1,
+    getencoder/1, getdecoder/1,
     register/3, register/4, unregister/1,
     register_module/1, register_module/2, unregister_module/1,
     start/0, start_link/0, stop/0]).
@@ -114,6 +115,33 @@ decode(String, Encoding) ->
         {error, Reason} ->
             erlang:error(Reason)
     end.
+
+
+%%
+%% @doc Return encoder
+%% @spec getencoder(Encoding) -> {ok, function()} | {error, badarg}
+%%
+getencoder(Encoding) ->
+    case get_encoder_decoder(Encoding) of
+        {ok, Encoder, _} ->
+            {ok, Encoder};
+        Other ->
+            Other
+    end.
+
+
+%%
+%% @doc Return decoder
+%% @spec getdecoder(Encoding) -> {ok, function()} | {error, badarg}
+%%
+getdecoder(Encoding) ->
+    case get_encoder_decoder(Encoding) of
+        {ok, _, Decoder} ->
+            {ok, Decoder};
+        Other ->
+            Other
+    end.
+
 
 
 %%
