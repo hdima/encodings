@@ -53,7 +53,7 @@
 -vsn("0.1").
 
 %% Public interface
--export([encode/2, decode/2, get_encoder_decoder/1,
+-export([encode/2, decode/2,
     getencoder/1, getdecoder/1,
     register/3, register/4, unregister/1,
     register_module/1, register_module/2, unregister_module/1,
@@ -92,8 +92,8 @@ behaviour_info(_Other) ->
 %%      Rest = string()
 %%
 encode(Unicode, Encoding) ->
-    case get_encoder_decoder(Encoding) of
-        {ok, Encoder, _Decoder} ->
+    case getencoder(Encoding) of
+        {ok, Encoder} ->
             Encoder(Unicode);
         {error, Reason} ->
             erlang:error(Reason)
@@ -109,8 +109,8 @@ encode(Unicode, Encoding) ->
 %%      Rest = binary()
 %%
 decode(String, Encoding) ->
-    case get_encoder_decoder(Encoding) of
-        {ok, _Encoder, Decoder} ->
+    case getdecoder(Encoding) of
+        {ok, Decoder} ->
             Decoder(String);
         {error, Reason} ->
             erlang:error(Reason)
@@ -122,12 +122,7 @@ decode(String, Encoding) ->
 %% @spec getencoder(Encoding) -> {ok, function()} | {error, badarg}
 %%
 getencoder(Encoding) ->
-    case get_encoder_decoder(Encoding) of
-        {ok, Encoder, _} ->
-            {ok, Encoder};
-        Other ->
-            Other
-    end.
+    gen_server:call(?MODULE, {getencoder, Encoding}).
 
 
 %%
@@ -135,25 +130,7 @@ getencoder(Encoding) ->
 %% @spec getdecoder(Encoding) -> {ok, function()} | {error, badarg}
 %%
 getdecoder(Encoding) ->
-    case get_encoder_decoder(Encoding) of
-        {ok, _, Decoder} ->
-            {ok, Decoder};
-        Other ->
-            Other
-    end.
-
-
-
-%%
-%% @doc Return encoder and decoder for the encoding
-%% @spec get_encoder_decoder(Encoding) -> Result
-%%      Encoding = string() | atom()
-%%      Encoder = function()
-%%      Decoder = function()
-%%      Result = {ok, Encoder, Decoder} | {error, badarg}
-%%
-get_encoder_decoder(Encoding) ->
-    gen_server:call(?MODULE, {get_encoder_decoder, Encoding}).
+    gen_server:call(?MODULE, {getdecoder, Encoding}).
 
 
 %%
@@ -285,11 +262,18 @@ handle_info(_Info, State) ->
     {noreply, State}.
 
 
-handle_call({get_encoder_decoder, Encoding}, _From, RE) ->
+handle_call({Cmd, Encoding}, _From, RE)
+        when Cmd =:= getencoder; Cmd =:= getdecoder ->
+    Pos = case Cmd of
+        getencoder ->
+            3;
+        getdecoder ->
+            4
+    end,
     E = normalize_encoding_name(Encoding, RE),
-    Result = try ets:lookup_element(?MODULE, E, 3) of
-        {Encoder, Decoder} ->
-            {ok, Encoder, Decoder}
+    Result = try ets:lookup_element(?MODULE, E, Pos) of
+        Func ->
+            {ok, Func}
     catch
         error:badarg ->
             {error, badarg}
@@ -299,8 +283,7 @@ handle_call({register_module, Module, Options}, _From, RE) ->
     {reply, register_module_internally(Module, Options, RE), RE};
 handle_call({unregister_module, Module}, _From, RE) ->
     {reply, unregister_module_internally(Module, RE), RE};
-handle_call({register, Encodings, Encoder, Decoder, Options},
-        _From, RE) ->
+handle_call({register, Encodings, Encoder, Decoder, Options}, _From, RE) ->
     {reply, register_encoding(Encodings, Encoder, Decoder, Options, RE), RE};
 handle_call({unregister, Encoding}, _From, RE) ->
     {reply, unregister_internally(Encoding, RE), RE};
@@ -368,7 +351,7 @@ unregister_module_internally(Module, RE) ->
 %% @doc Register encoder/decoder
 %%
 register_encoding(Aliases, Encoder, Decoder, Options, RE) ->
-    Info = [{normalize_encoding_name(E, RE), Aliases, {Encoder, Decoder}} ||
+    Info = [{normalize_encoding_name(E, RE), Aliases, Encoder, Decoder} ||
         E <- Aliases],
     case Options of
         [override] ->
@@ -386,7 +369,7 @@ unregister_internally(Encoding, RE) ->
     case ets:lookup(?MODULE, E) of
         [] ->
             ok;
-        [{_, Aliases, _}] ->
+        [{_, Aliases, _, _}] ->
             unregister_aliases(Aliases)
     end.
 
