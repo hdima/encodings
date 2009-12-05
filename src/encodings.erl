@@ -54,8 +54,7 @@
 
 %% Public interface
 -export([encode/2, decode/2, getencoder/1, getdecoder/1,
-    register/3, register/4, register_module/1, register_module/2,
-    start/0, start_link/0, stop/0]).
+    register/1, register/2, start/0, start_link/0, stop/0]).
 
 %% Behaviour information
 -export([behaviour_info/1]).
@@ -132,48 +131,34 @@ getdecoder(Encoding) ->
 
 
 %%
-%% @doc Register callback module and return true on success
-%% @spec register_module(Module) -> bool()
-%%      Module = module()
-%%
-register_module(Module) ->
-    register_module(Module, []).
-
-
-%%
-%% @doc Register callback module with options
-%% @spec register_module(Module, Options) -> bool()
-%%      Module = module()
-%%      Options = [] | [override]
-%%
-register_module(Module, Opts) when Opts =:= []; Opts =:= [override] ->
-    gen_server:call(?MODULE, {register_module, Module, Opts}).
-
-
-%%
-%% @doc Register encoder and decoder as functions and return true on success
-%% @spec register(Encodings, Encoder, Decoder) -> true
-%%      Encodings = [Encoding]
-%%      Encoding = string() | atom()
+%% @doc Register encoder and decoder
+%% @spec register(Spec) -> true
+%%      Spec = {module, module()} | {functions, Aliases, Encoder, Decoder}
+%%      Aliases = [string() | atom()]
 %%      Encoder = function()
 %%      Decoder = function()
 %%
-register(Encodings, Encoder, Decoder) ->
-    register(Encodings, Encoder, Decoder, []).
+register(Spec) ->
+    encodings:register(Spec, []).
 
 
 %%
 %% @doc Register encoder and decoder with options
-%% @spec register(Encodings, Encoder, Decoder, Options) -> true
-%%      Encodings = [Encoding]
-%%      Encoding = string() | atom()
+%% @spec register(Spec, Options) -> true
+%%      Spec = {module, module()} | {functions, Aliases, Encoder, Decoder}
+%%      Aliases = [string() | atom()]
 %%      Encoder = function()
 %%      Decoder = function()
 %%      Options = [] | [override]
 %%
-register(Encodings, Encoder, Decoder, Opts)
-        when Opts =:= []; Opts =:= [override] ->
-    gen_server:call(?MODULE, {register, Encodings, Encoder, Decoder, Opts}).
+register(Spec, Opts) when Opts =:= []; Opts =:= [override] ->
+    case Spec of
+        {module, Module} ->
+            gen_server:call(?MODULE, {register_module, Module, Opts});
+        {functions, Aliases, Encoder, Decoder} ->
+            gen_server:call(?MODULE,
+                {register, Aliases, Encoder, Decoder, Opts})
+    end.
 
 
 %%
@@ -249,7 +234,7 @@ handle_call({Cmd, Encoding}, _From, RE)
     end,
     {reply, Result, RE};
 handle_call({register_module, Module, Options}, _From, RE) ->
-    {reply, register_module_internally(Module, Options, RE), RE};
+    {reply, register_module(Module, Options, RE), RE};
 handle_call({register, Encodings, Encoder, Decoder, Options}, _From, RE) ->
     {reply, register_encoding(Encodings, Encoder, Decoder, Options, RE), RE};
 handle_call(_, _, State) ->
@@ -285,7 +270,7 @@ register_builtin_modules(RE) ->
 register_builtin_modules([], _) ->
     ok;
 register_builtin_modules([Module | Modules], RE) ->
-    case register_module_internally(Module, [], RE) of
+    case register_module(Module, [], RE) of
         true ->
             register_builtin_modules(Modules, RE);
         false ->
@@ -298,7 +283,7 @@ register_builtin_modules([Module | Modules], RE) ->
 %%
 %% @doc Register module
 %%
-register_module_internally(Module, Options, RE) ->
+register_module(Module, Options, RE) ->
     Encoder = fun (U) -> Module:encode(U) end,
     Decoder = fun (S) -> Module:decode(S) end,
     Aliases = Module:aliases(),

@@ -115,7 +115,8 @@ test_register() ->
     {error, badarg} = encodings:getencoder("encoding"),
     Encoder = fun (U) -> "Encoded " ++ U end,
     Decoder = fun (S) -> "Decoded " ++ S end,
-    encodings:register(["encoding", "an encoding"], Encoder, Decoder),
+    encodings:register(
+        {functions, ["encoding", "an encoding"], Encoder, Decoder}),
     {ok, Encoder} = encodings:getencoder("encoding"),
     {ok, Decoder} = encodings:getdecoder("encoding"),
     {ok, Encoder} = encodings:getencoder("anencoding"),
@@ -128,7 +129,7 @@ test_register() ->
 
 
 test_register_module() ->
-    encodings:register_module(enc_ascii),
+    encodings:register({module, enc_ascii}),
     {ok, _} = encodings:getencoder("ascii"),
     {ok, _} = encodings:getdecoder("ascii"),
     ok.
@@ -137,8 +138,9 @@ test_register_module() ->
 test_registration_override() ->
     Encoder = fun (U) -> "Encoded " ++ U end,
     Decoder = fun (S) -> "Decoded " ++ S end,
-    false = encodings:register(["ascii"], Encoder, Decoder),
-    true = encodings:register(["ascii"], Encoder, Decoder, [override]),
+    false = encodings:register({functions, ["ascii"], Encoder, Decoder}),
+    true = encodings:register(
+        {functions, ["ascii"], Encoder, Decoder}, [override]),
     {ok, Encoder} = encodings:getencoder("ascii"),
     {ok, Decoder} = encodings:getdecoder("ascii"),
     "Encoded Unicode" = Encoder("Unicode"),
