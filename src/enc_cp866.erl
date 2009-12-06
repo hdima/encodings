@@ -41,8 +41,13 @@
 %%
 %% @doc Return encoding aliases
 %%
-aliases() ->
-    [cp866, "cp866"].
+aliases() -> [
+    cp866,
+    "cp866",
+    "866",
+    "ibm866",
+    "csibm866"
+    ].
 
 
 %%
