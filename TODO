@@ -7,5 +7,3 @@ General
 
 - We can lookup encoder/decoder in client code by open database with
   'protected' flag?
-
-- Check interface for consistency
