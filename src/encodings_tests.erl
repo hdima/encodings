@@ -157,7 +157,8 @@ encodings_test_() -> {setup, fun setup/0, fun cleanup/1, [
         "cp1251", "windows-1251", "1251"], "cp1251.txt")),
     ?_assertEqual(ok, test_encoding([cp866, "cp866", "866",
         "IBM866", "CSIBM866"], "cp866.txt")),
-    ?_assertEqual(ok, test_encoding([koi8r, "koi8-r", "KOI8-R"], "koi8-r.txt")),
+    ?_assertEqual(ok, test_encoding([koi8r, "koi8-r", "KOI8-R", "CSKOI8R"],
+        "koi8-r.txt")),
     ?_assertEqual(ok, test_encoding([iso8859_5, "ISO8859-5",
         "csisolatincyrillic", "cyrillic", "ISO-8859-5", "ISO-8859-5 1988",
         "ISO IR-144"], "iso8859-5.txt"))

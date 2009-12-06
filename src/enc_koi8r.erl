@@ -41,8 +41,11 @@
 %%
 %% @doc Return encoding aliases
 %%
-aliases() ->
-    [koi8r, "koi8_r"].
+aliases() -> [
+    koi8r,
+    "koi8_r",
+    "cskoi8r"
+    ].
 
 
 %%
