@@ -54,7 +54,7 @@
 
 %% Public interface
 -export([encode/2, decode/2, getencoder/1, getdecoder/1,
-    register/1, register/2, start/0, start_link/0, stop/0]).
+    register/1, start/0, start_link/0, stop/0]).
 
 %% Behaviour information
 -export([behaviour_info/1]).
@@ -138,27 +138,10 @@ getdecoder(Encoding) ->
 %%      Encoder = function()
 %%      Decoder = function()
 %%
-register(Spec) ->
-    encodings:register(Spec, []).
-
-
-%%
-%% @doc Register encoder and decoder with options
-%% @spec register(Spec, Options) -> true
-%%      Spec = {module, module()} | {functions, Aliases, Encoder, Decoder}
-%%      Aliases = [string() | atom()]
-%%      Encoder = function()
-%%      Decoder = function()
-%%      Options = [] | [override]
-%%
-register(Spec, Opts) when Opts =:= []; Opts =:= [override] ->
-    case Spec of
-        {module, Module} ->
-            gen_server:call(?MODULE, {register_module, Module, Opts});
-        {functions, Aliases, Encoder, Decoder} ->
-            gen_server:call(?MODULE,
-                {register, Aliases, Encoder, Decoder, Opts})
-    end.
+register({module, Module}) ->
+    gen_server:call(?MODULE, {register_module, Module});
+register({functions, Aliases, Encoder, Decoder}) ->
+    gen_server:call(?MODULE, {register, Aliases, Encoder, Decoder}).
 
 
 %%
@@ -233,10 +216,10 @@ handle_call({Cmd, Encoding}, _From, RE)
             {error, badarg}
     end,
     {reply, Result, RE};
-handle_call({register_module, Module, Options}, _From, RE) ->
-    {reply, register_module(Module, Options, RE), RE};
-handle_call({register, Encodings, Encoder, Decoder, Options}, _From, RE) ->
-    {reply, register_encoding(Encodings, Encoder, Decoder, Options, RE), RE};
+handle_call({register_module, Module}, _From, RE) ->
+    {reply, register_module(Module, RE), RE};
+handle_call({register, Encodings, Encoder, Decoder}, _From, RE) ->
+    {reply, register_encoding(Encodings, Encoder, Decoder, RE), RE};
 handle_call(_, _, State) ->
     {reply, badarg, State}.
 
@@ -270,35 +253,24 @@ register_builtin_modules(RE) ->
 register_builtin_modules([], _) ->
     ok;
 register_builtin_modules([Module | Modules], RE) ->
-    case register_module(Module, [], RE) of
-        true ->
-            register_builtin_modules(Modules, RE);
-        false ->
-            error_logger:format(
-                "Duplicate encoding alias in module ~p~n", [Module]),
-            register_builtin_modules(Modules, RE)
-    end.
+    register_module(Module, RE),
+    register_builtin_modules(Modules, RE).
 
 
 %%
 %% @doc Register module
 %%
-register_module(Module, Options, RE) ->
+register_module(Module, RE) ->
     Encoder = fun (U) -> Module:encode(U) end,
     Decoder = fun (S) -> Module:decode(S) end,
     Aliases = Module:aliases(),
-    register_encoding(Aliases, Encoder, Decoder, Options, RE).
+    register_encoding(Aliases, Encoder, Decoder, RE).
 
 
 %%
 %% @doc Register encoder/decoder
 %%
-register_encoding(Aliases, Encoder, Decoder, Options, RE) ->
+register_encoding(Aliases, Encoder, Decoder, RE) ->
     Info = [{normalize_encoding_name(E, RE), Aliases, Encoder, Decoder} ||
         E <- Aliases],
-    case Options of
-        [override] ->
-            ets:insert(?MODULE, Info);
-        [] ->
-            ets:insert_new(?MODULE, Info)
-    end.
+    ets:insert(?MODULE, Info).
