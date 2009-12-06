@@ -39,8 +39,21 @@
 %%
 %% @doc Return encoding aliases
 %%
-aliases() ->
-    [ascii, "ascii"].
+aliases() -> [
+    ascii,
+    "ascii",
+    "646",
+    "ansi_x3_4_1968",
+    "ansi_x3_4_1986",
+    "cp367",
+    "csascii",
+    "ibm367",
+    "iso646_us",
+    "iso_646_irv_1991",
+    "iso_ir_6",
+    "us",
+    "us_ascii"
+    ].
 
 
 %%

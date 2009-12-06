@@ -145,7 +145,10 @@ cleanup(_) ->
 
 
 encodings_test_() -> {setup, fun setup/0, fun cleanup/1, [
-    ?_assertEqual(ok, test_encoding([ascii, "ascii", "ASCII"], "ascii.txt")),
+    ?_assertEqual(ok, test_encoding([ascii, "ascii", "ASCII", "646",
+        "ansi-x3.4-1968", "ansi-x3-4-1986", "cp367", "csascii",
+        "IBM367", "ISO646-US", "ISO-646.IRV 1991", "iso-ir-6",
+        "US", "US-ASCII"], "ascii.txt")),
     ?_assertEqual(ok, test_encoding(
         [iso8859_1, "iso8859-1", latin1, "latin1"], "iso8859-1.txt")),
     ?_assertEqual(ok, test_encoding(
