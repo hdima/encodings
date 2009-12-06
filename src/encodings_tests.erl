@@ -31,6 +31,8 @@
 -author("Dmitry Vasiliev <dima@hlabs.spb.ru>").
 -vsn("0.1").
 
+-export([test_aliases/1, test_encode_decode/3, setup/0, cleanup/1]).
+
 -include_lib("eunit/include/eunit.hrl").
 
 
@@ -94,21 +96,6 @@ read_tests([{Byte, Char} | Tail],
         String, Unicode, DecodeErrors, EncodeErrors) ->
     read_tests(Tail, <<String/binary,Byte>>,
         [Char | Unicode], DecodeErrors, EncodeErrors).
-
-
-test_utf8(Aliases) ->
-    test_aliases(Aliases),
-    Bytes = <<0,
-        16#7f,
-        16#c2, 16#80,
-        16#df, 16#bf,
-        16#e0, 16#a0, 16#80,
-        16#ef, 16#bf, 16#bd,
-        16#f0, 16#90, 16#80, 16#80,
-        16#f4, 16#8f, 16#bf, 16#bf>>,
-    Unicode = [0, 16#7f, 16#80, 16#7ff, 16#800, 16#fffd, 16#10000, 16#10ffff],
-    test_encode_decode(hd(Aliases), Bytes, Unicode),
-    ok.
 
 
 test_register() ->
@@ -183,8 +170,3 @@ normalize_encoding_test_() -> [
     ?_assertEqual("encoding", encodings:normalize_encoding(" encoding -_")),
     ?_assertEqual("encoding_1", encodings:normalize_encoding("encoding - 1"))
     ].
-
-
-utf8_test_() -> {setup, fun setup/0, fun cleanup/1, [
-    ?_assertEqual(ok, test_utf8([utf8, "utf-8"]))
-    ]}.
