@@ -102,14 +102,10 @@ test_register() ->
     {error, badarg} = encodings:getencoder("encoding"),
     Encoder = fun (U) -> <<"Encoded ", (list_to_binary(U))/binary>> end,
     Decoder = fun (S) -> "Decoded " ++ binary_to_list(S) end,
-    encodings:register(
-        {functions, ["encoding", "an_encoding"], Encoder, Decoder}),
-    {ok, Encoder} = encodings:getencoder("encoding"),
-    {ok, Decoder} = encodings:getdecoder("encoding"),
-    {ok, Encoder} = encodings:getencoder("an-encoding"),
-    {ok, Decoder} = encodings:getdecoder("an-encoding"),
-    {ok, Encoder} = encodings:getencoder("an encoding"),
-    {ok, Decoder} = encodings:getdecoder("an encoding"),
+    Aliases = ["encoding", "an_encoding"],
+    encodings:register({functions, Aliases, Encoder, Decoder}),
+    {ok, Aliases, Encoder, Decoder} = encodings:lookup("encoding"),
+    {ok, Aliases, Encoder, Decoder} = encodings:lookup("an-encoding"),
     <<"Encoded Unicode">> = Encoder("Unicode"),
     "Decoded String" = Decoder(<<"String">>),
     ok.

@@ -56,7 +56,8 @@
 
 %% Public interface
 -export([encode/2, decode/2, getencoder/1, getdecoder/1,
-    register/1, start/0, start_link/0, stop/0, normalize_encoding/1]).
+    register/1, lookup/1, start/0, start_link/0, stop/0,
+    normalize_encoding/1]).
 
 %% Behaviour information
 -export([behaviour_info/1]).
@@ -141,6 +142,18 @@ register({module, Module}) ->
     gen_server:call(?MODULE, {register_module, Module});
 register({functions, Aliases, Encoder, Decoder}) ->
     gen_server:call(?MODULE, {register, Aliases, Encoder, Decoder}).
+
+
+%%
+%% @doc Lookup encoding info
+%% @spec lookup(Encoding) -> {ok, Aliases, Encoder, Decoder} | {error, badarg}
+%%      Encoding = string() | atom()
+%%      Aliases = [Encoding]
+%%      Encoder = function()
+%%      Decoder = function()
+%%
+lookup(Encoding) ->
+    gen_server:call(?MODULE, {lookup, Encoding}).
 
 
 %%
@@ -233,14 +246,16 @@ handle_info(_Info, State) ->
 
 
 handle_call({Cmd, Encoding}, _From, State)
-        when Cmd =:= getencoder; Cmd =:= getdecoder ->
+        when Cmd =:= getencoder; Cmd =:= getdecoder; Cmd =:= lookup ->
     Result = case ets:lookup(?MODULE, normalize_encoding(Encoding)) of
-        [{_, Encoder, Decoder}] ->
+        [{_, Aliases, Encoder, Decoder}] ->
             case Cmd of
                 getencoder ->
                     {ok, Encoder};
                 getdecoder ->
-                    {ok, Decoder}
+                    {ok, Decoder};
+                lookup ->
+                    {ok, Aliases, Encoder, Decoder}
             end;
         [] ->
             {error, badarg}
@@ -288,5 +303,6 @@ register_module(Module) ->
 %% @doc Register encoder/decoder
 %%
 register_encoding(Aliases, Encoder, Decoder) ->
-    Info = [{normalize_encoding(E), Encoder, Decoder} || E <- Aliases],
+    Info = [{normalize_encoding(E), Aliases, Encoder, Decoder}
+        || E <- Aliases],
     ets:insert(?MODULE, Info).
