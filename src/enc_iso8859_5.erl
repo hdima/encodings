@@ -41,8 +41,15 @@
 %%
 %% @doc Return encoding aliases
 %%
-aliases() ->
-    [iso8859_5, latin5, "iso8859_5", "latin5"].
+aliases() -> [
+    iso8859_5,
+    "iso8859_5",
+    "csisolatincyrillic",
+    "cyrillic",
+    "iso_8859_5",
+    "iso_8859_5_1988",
+    "iso_ir_144"
+    ].
 
 
 %%
