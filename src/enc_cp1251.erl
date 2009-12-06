@@ -41,8 +41,13 @@
 %%
 %% @doc Return encoding aliases
 %%
-aliases() ->
-    [cp1251, windows1251, "cp1251", "1251", "windows_1251"].
+aliases() -> [
+    cp1251,
+    windows1251,
+    "cp1251",
+    "1251",
+    "windows_1251"
+    ].
 
 
 %%

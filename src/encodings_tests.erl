@@ -149,8 +149,10 @@ encodings_test_() -> {setup, fun setup/0, fun cleanup/1, [
         "ansi-x3.4-1968", "ansi-x3-4-1986", "cp367", "csascii",
         "IBM367", "ISO646-US", "ISO-646.IRV 1991", "iso-ir-6",
         "US", "US-ASCII"], "ascii.txt")),
-    ?_assertEqual(ok, test_encoding(
-        [iso8859_1, "iso8859-1", latin1, "latin1"], "iso8859-1.txt")),
+    ?_assertEqual(ok, test_encoding([latin1, iso8859_1,
+        "8859", "CP819", "csisolatin1", "IBM819", "iso8859", "iso8859-1",
+        "ISO-8859-1", "ISO-8859-1 1987", "ISO IR-100", "L1", "LATIN",
+        "LATIN1", "latin1"], "iso8859-1.txt")),
     ?_assertEqual(ok, test_encoding([cp1251, windows1251,
         "cp1251", "windows-1251", "1251"], "cp1251.txt")),
     ?_assertEqual(ok, test_encoding([cp866, "cp866", "866",
