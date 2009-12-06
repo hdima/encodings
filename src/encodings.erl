@@ -201,18 +201,16 @@ handle_info(_Info, State) ->
 
 handle_call({Cmd, Encoding}, _From, RE)
         when Cmd =:= getencoder; Cmd =:= getdecoder ->
-    Pos = case Cmd of
-        getencoder ->
-            3;
-        getdecoder ->
-            4
-    end,
     E = normalize_encoding_name(Encoding, RE),
-    Result = try ets:lookup_element(?MODULE, E, Pos) of
-        Func ->
-            {ok, Func}
-    catch
-        error:badarg ->
+    Result = case ets:lookup(?MODULE, E) of
+        [{_, Encoder, Decoder}] ->
+            case Cmd of
+                getencoder ->
+                    {ok, Encoder};
+                getdecoder ->
+                    {ok, Decoder}
+            end;
+        [] ->
             {error, badarg}
     end,
     {reply, Result, RE};
@@ -271,6 +269,6 @@ register_module(Module, RE) ->
 %% @doc Register encoder/decoder
 %%
 register_encoding(Aliases, Encoder, Decoder, RE) ->
-    Info = [{normalize_encoding_name(E, RE), Aliases, Encoder, Decoder} ||
+    Info = [{normalize_encoding_name(E, RE), Encoder, Decoder} ||
         E <- Aliases],
     ets:insert(?MODULE, Info).
