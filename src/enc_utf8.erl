@@ -39,8 +39,15 @@
 %%
 %% @doc Return encoding aliases
 %%
-aliases() ->
-    [utf8, "utf_8"].
+aliases() -> [
+    utf8,
+    "utf_8",
+    "u8",
+    "utf",
+    "utf8",
+    "utf8_ucs2",
+    "utf8_ucs4"
+    ].
 
 
 %%

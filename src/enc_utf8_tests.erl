@@ -59,5 +59,6 @@ test_utf8(Aliases) ->
 
 utf8_test_() -> {setup,
         fun encodings_tests:setup/0, fun encodings_tests:cleanup/1, [
-    ?_assertEqual(ok, test_utf8([utf8, "utf-8"]))
+    ?_assertEqual(ok, test_utf8([utf8, "UTF-8", "u8", "UTF", "utf8",
+        "UTF8-UCS2", "UTF8-UCS4"]))
     ]}.
