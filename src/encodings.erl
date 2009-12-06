@@ -52,19 +52,18 @@
 -author("Dmitry Vasiliev <dima@hlabs.spb.ru>").
 -vsn("0.1").
 
+-behaviour(gen_server).
+
 %% Public interface
 -export([encode/2, decode/2, getencoder/1, getdecoder/1,
-    register/1, start/0, start_link/0, stop/0]).
+    register/1, start/0, start_link/0, stop/0, normalize_encoding/1]).
 
 %% Behaviour information
 -export([behaviour_info/1]).
 
-%% Behaviour callbacks
+%% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
     terminate/2, code_change/3]).
-
-%% RE of symbols which need to be ignored in encoding name
--define(IGNORE_IN_NAMES, "[- _.]+").
 
 
 %%
@@ -166,14 +165,48 @@ stop() ->
 
 
 %%
+%% @doc Normalize encoding name. All alphanumeric characters are lowercased.
+%% All non-alphanumeric characters are collapsed and replaced with a single
+%% underscore, e.g. '  -;#' becomes '_'. Leading and trailing underscores are
+%% removed.
+%% @spec normalize_encoding(string() | atom()) -> string() | atom()
+%%
+normalize_encoding(Name) when is_list(Name) ->
+    normalize_encoding(Name, "", none);
+normalize_encoding(Name) when is_atom(Name) ->
+    Name.
+
+normalize_encoding([C | Tail], Name, Last)
+        when C >= $0 andalso C =< $9; C >= $a andalso C =< $z ->
+    case Last of
+        skip ->
+            normalize_encoding(Tail, [C, $_ | Name], char);
+        _ ->
+            normalize_encoding(Tail, [C | Name], char)
+    end;
+normalize_encoding([C | Tail], Name, Last) when C >= $A andalso C =< $Z ->
+    case Last of
+        skip ->
+            normalize_encoding(Tail, [C + 32, $_ | Name], char);
+        _ ->
+            normalize_encoding(Tail, [C + 32 | Name], char)
+    end;
+normalize_encoding([_ | Tail], Name, none) ->
+    normalize_encoding(Tail, Name, none);
+normalize_encoding([_ | Tail], Name, _) ->
+    normalize_encoding(Tail, Name, skip);
+normalize_encoding("", Name, _) ->
+    lists:reverse(Name).
+
+
+%%
 %% @doc Initialise process
 %%
 init([]) ->
     process_flag(trap_exit, true),
     ets:new(?MODULE, [set, private, named_table]),
-    {ok, RE} = re:compile(?IGNORE_IN_NAMES),
-    register_builtin_modules(RE),
-    {ok, RE}.
+    register_builtin_modules(),
+    {ok, none}.
 
 terminate(_Reason, _State) ->
     ets:delete(?MODULE),
@@ -199,10 +232,9 @@ handle_info(_Info, State) ->
     {noreply, State}.
 
 
-handle_call({Cmd, Encoding}, _From, RE)
+handle_call({Cmd, Encoding}, _From, State)
         when Cmd =:= getencoder; Cmd =:= getdecoder ->
-    E = normalize_encoding_name(Encoding, RE),
-    Result = case ets:lookup(?MODULE, E) of
+    Result = case ets:lookup(?MODULE, normalize_encoding(Encoding)) of
         [{_, Encoder, Decoder}] ->
             case Cmd of
                 getencoder ->
@@ -213,11 +245,11 @@ handle_call({Cmd, Encoding}, _From, RE)
         [] ->
             {error, badarg}
     end,
-    {reply, Result, RE};
-handle_call({register_module, Module}, _From, RE) ->
-    {reply, register_module(Module, RE), RE};
-handle_call({register, Encodings, Encoder, Decoder}, _From, RE) ->
-    {reply, register_encoding(Encodings, Encoder, Decoder, RE), RE};
+    {reply, Result, State};
+handle_call({register_module, Module}, _From, State) ->
+    {reply, register_module(Module), State};
+handle_call({register, Encodings, Encoder, Decoder}, _From, State) ->
+    {reply, register_encoding(Encodings, Encoder, Decoder), State};
 handle_call(_, _, State) ->
     {reply, badarg, State}.
 
@@ -227,48 +259,34 @@ handle_call(_, _, State) ->
 %%
 
 %%
-%% @doc Normalize encoding name
-%% @spec normalize_encoding_name(Name, RE) -> NewName
-%%      Name = string()
-%%      RE = mp()
-%%      NewName = string()
-%%
-normalize_encoding_name(Name, RE) when is_list(Name) ->
-    Replaced = re:replace(Name, RE, "", [global, {return, list}]),
-    string:to_lower(Replaced);
-normalize_encoding_name(Name, _) ->
-    Name.
-
-%%
 %% @doc Register builtin modules
 %%
-register_builtin_modules(RE) ->
+register_builtin_modules() ->
     application:load(encodings),
     {ok, Modules} = application:get_key(encodings, modules),
     register_builtin_modules([N || N <- Modules,
-        string:str(atom_to_list(N), "enc_") =:= 1], RE).
+        string:str(atom_to_list(N), "enc_") =:= 1]).
 
-register_builtin_modules([], _) ->
+register_builtin_modules([]) ->
     ok;
-register_builtin_modules([Module | Modules], RE) ->
-    register_module(Module, RE),
-    register_builtin_modules(Modules, RE).
+register_builtin_modules([Module | Modules]) ->
+    register_module(Module),
+    register_builtin_modules(Modules).
 
 
 %%
 %% @doc Register module
 %%
-register_module(Module, RE) ->
+register_module(Module) ->
     Encoder = fun (U) -> Module:encode(U) end,
     Decoder = fun (S) -> Module:decode(S) end,
     Aliases = Module:aliases(),
-    register_encoding(Aliases, Encoder, Decoder, RE).
+    register_encoding(Aliases, Encoder, Decoder).
 
 
 %%
 %% @doc Register encoder/decoder
 %%
-register_encoding(Aliases, Encoder, Decoder, RE) ->
-    Info = [{normalize_encoding_name(E, RE), Encoder, Decoder} ||
-        E <- Aliases],
+register_encoding(Aliases, Encoder, Decoder) ->
+    Info = [{normalize_encoding(E), Encoder, Decoder} || E <- Aliases],
     ets:insert(?MODULE, Info).

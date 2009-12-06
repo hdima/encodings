@@ -40,7 +40,7 @@
 %% @doc Return encoding aliases
 %%
 aliases() ->
-    [utf8, "utf8"].
+    [utf8, "utf_8"].
 
 
 %%

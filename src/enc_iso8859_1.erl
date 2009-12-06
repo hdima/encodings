@@ -40,7 +40,7 @@
 %% @doc Return encoding aliases
 %%
 aliases() ->
-    [iso8859_1, "iso88591", latin1, "latin1"].
+    [iso8859_1, "iso8859_1", latin1, "latin1"].
 
 
 %%

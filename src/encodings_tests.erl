@@ -116,11 +116,11 @@ test_register() ->
     Encoder = fun (U) -> <<"Encoded ", (list_to_binary(U))/binary>> end,
     Decoder = fun (S) -> "Decoded " ++ binary_to_list(S) end,
     encodings:register(
-        {functions, ["encoding", "an encoding"], Encoder, Decoder}),
+        {functions, ["encoding", "an_encoding"], Encoder, Decoder}),
     {ok, Encoder} = encodings:getencoder("encoding"),
     {ok, Decoder} = encodings:getdecoder("encoding"),
-    {ok, Encoder} = encodings:getencoder("anencoding"),
-    {ok, Decoder} = encodings:getdecoder("anencoding"),
+    {ok, Encoder} = encodings:getencoder("an-encoding"),
+    {ok, Decoder} = encodings:getdecoder("an-encoding"),
     {ok, Encoder} = encodings:getencoder("an encoding"),
     {ok, Decoder} = encodings:getdecoder("an encoding"),
     <<"Encoded Unicode">> = Encoder("Unicode"),
@@ -160,13 +160,13 @@ cleanup(_) ->
 encodings_test_() -> {setup, fun setup/0, fun cleanup/1, [
     ?_assertEqual(ok, test_encoding([ascii, "ascii", "ASCII"], "ascii.txt")),
     ?_assertEqual(ok, test_encoding(
-        [iso8859_1, "iso-88591", latin1, "latin-1"], "iso8859-1.txt")),
+        [iso8859_1, "iso8859-1", latin1, "latin1"], "iso8859-1.txt")),
     ?_assertEqual(ok, test_encoding(
-        [cp1251, windows1251, "cp_1251", "windows 1251"], "cp1251.txt")),
+        [cp1251, windows1251, "cp1251", "windows-1251", "1251"], "cp1251.txt")),
     ?_assertEqual(ok, test_encoding([cp866, "cp866"], "cp866.txt")),
-    ?_assertEqual(ok, test_encoding([koi8r, "koi8r", "KOI8-R"], "koi8-r.txt")),
+    ?_assertEqual(ok, test_encoding([koi8r, "koi8-r", "KOI8-R"], "koi8-r.txt")),
     ?_assertEqual(ok, test_encoding(
-        [iso8859_5, "iso8859-5", latin5, "latin-5"], "iso8859-5.txt"))
+        [iso8859_5, "iso8859-5", latin5, "latin5"], "iso8859-5.txt"))
     ]}.
 
 
@@ -177,6 +177,14 @@ registration_test_() -> {setup, fun setup/0, fun cleanup/1, [
     ]}.
 
 
+normalize_encoding_test_() -> [
+    ?_assertEqual(encoding, encodings:normalize_encoding(encoding)),
+    ?_assertEqual("encoding", encodings:normalize_encoding("encoding")),
+    ?_assertEqual("encoding", encodings:normalize_encoding(" encoding -_")),
+    ?_assertEqual("encoding_1", encodings:normalize_encoding("encoding - 1"))
+    ].
+
+
 utf8_test_() -> {setup, fun setup/0, fun cleanup/1, [
-    ?_assertEqual(ok, test_utf8([utf8, "utf8"]))
+    ?_assertEqual(ok, test_utf8([utf8, "utf-8"]))
     ]}.
