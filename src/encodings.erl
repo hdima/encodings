@@ -174,7 +174,7 @@ lookup(Encoding) ->
 %% @doc Register error handler
 %% @spec register_error(atom(), function()) -> true
 %%
-register_error(Name, Handler) when is_atom(Name), is_function(Handler) ->
+register_error(Name, Handler) when is_atom(Name), is_function(Handler, 2) ->
     gen_server:call(?MODULE, {register_error, Name, Handler}).
 
 
@@ -249,6 +249,7 @@ init([]) ->
     process_flag(trap_exit, true),
     ets:new(?MODULE, [set, private, named_table]),
     register_builtin_modules(),
+    register_builtin_errors(encoding_errors:get_builtin_errors()),
     {ok, none}.
 
 terminate(_Reason, _State) ->
@@ -293,7 +294,7 @@ handle_call({Cmd, Encoding}, _From, State)
     end,
     {reply, Result, State};
 handle_call({register_error, Name, Handler}, _From, State) ->
-    {reply, ets:insert(?MODULE, {{error, Name}, Handler}), State};
+    {reply, register_error_internally(Name, Handler), State};
 handle_call({lookup_error, Name}, _From, State) ->
     Result = try ets:lookup_element(?MODULE, {error, Name}, 2) of
         Handler ->
@@ -348,3 +349,20 @@ register_encoding(Aliases, Encoder, Decoder) ->
     Info = [{{encoding, normalize_encoding(E)}, Aliases, Encoder, Decoder}
         || E <- Aliases],
     ets:insert(?MODULE, Info).
+
+
+%%
+%% @doc Register builtin error handlers
+%%
+register_builtin_errors([]) ->
+    ok;
+register_builtin_errors([{Name, Handler} | Tail]) ->
+    register_error_internally(Name, Handler),
+    register_builtin_errors(Tail).
+
+
+%%
+%% @doc Register error handler internally
+%%
+register_error_internally(Name, Handler) ->
+    ets:insert(?MODULE, {{error, Name}, Handler}).
