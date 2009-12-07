@@ -48,6 +48,19 @@
 %%          Rest = binary()
 %% </pre>
 %%
+%% Error handler function:
+%%
+%% <pre>
+%%      error_handler({encode, function()}, {error, Encoded, string()}) -> R
+%%          Encoded = binary()
+%%          R = binary() | {error, Encoded, string()}
+%%              | {incomplete, Encoded, string()}
+%%      error_handler({decode, function()}, {error, Decoded, binary()}) -> R
+%%          Decoded = string()
+%%          R = string() | {error, Decoded, binary()}
+%%              | {incomplete, Decoded, binary()}
+%% </pre>
+%%
 -module(encodings).
 -author("Dmitry Vasiliev <dima@hlabs.spb.ru>").
 -vsn("0.1").
@@ -56,7 +69,8 @@
 
 %% Public interface
 -export([encode/2, decode/2, getencoder/1, getdecoder/1,
-    register/1, lookup/1, start/0, start_link/0, stop/0,
+    register/1, lookup/1, register_error/2, lookup_error/1,
+    start/0, start_link/0, stop/0,
     normalize_encoding/1]).
 
 %% Behaviour information
@@ -157,6 +171,22 @@ lookup(Encoding) ->
 
 
 %%
+%% @doc Register error handler
+%% @spec register_error(atom(), function()) -> true
+%%
+register_error(Name, Handler) when is_atom(Name), is_function(Handler) ->
+    gen_server:call(?MODULE, {register_error, Name, Handler}).
+
+
+%%
+%% @doc Lookup error handler
+%% @spec lookup_error(atom()) -> function()
+%%
+lookup_error(Name) when is_atom(Name) ->
+    gen_server:call(?MODULE, {lookup_error, Name}).
+
+
+%%
 %% @doc Start encoder process
 %%
 start() ->
@@ -247,7 +277,8 @@ handle_info(_Info, State) ->
 
 handle_call({Cmd, Encoding}, _From, State)
         when Cmd =:= getencoder; Cmd =:= getdecoder; Cmd =:= lookup ->
-    Result = case ets:lookup(?MODULE, normalize_encoding(Encoding)) of
+    Key = {encoding, normalize_encoding(Encoding)},
+    Result = case ets:lookup(?MODULE, Key) of
         [{_, Aliases, Encoder, Decoder}] ->
             case Cmd of
                 getencoder ->
@@ -258,6 +289,17 @@ handle_call({Cmd, Encoding}, _From, State)
                     {ok, Aliases, Encoder, Decoder}
             end;
         [] ->
+            {error, badarg}
+    end,
+    {reply, Result, State};
+handle_call({register_error, Name, Handler}, _From, State) ->
+    {reply, ets:insert(?MODULE, {{error, Name}, Handler}), State};
+handle_call({lookup_error, Name}, _From, State) ->
+    Result = try ets:lookup_element(?MODULE, {error, Name}, 2) of
+        Handler ->
+            Handler
+    catch
+        error:badarg ->
             {error, badarg}
     end,
     {reply, Result, State};
@@ -303,6 +345,6 @@ register_module(Module) ->
 %% @doc Register encoder/decoder
 %%
 register_encoding(Aliases, Encoder, Decoder) ->
-    Info = [{normalize_encoding(E), Aliases, Encoder, Decoder}
+    Info = [{{encoding, normalize_encoding(E)}, Aliases, Encoder, Decoder}
         || E <- Aliases],
     ets:insert(?MODULE, Info).
