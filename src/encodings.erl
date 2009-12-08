@@ -53,12 +53,14 @@
 %% <pre>
 %%      error_handler(encode, {error, Encoded, string()}) -> R
 %%          Encoded = binary()
-%%          R = {repeat, string()} | {continue, binary()}
-%%              | {error, Encoded, string()}
+%%          R = {ok, Replacement, Tail} | {error, Encoded, string()}
+%%          Replacement = binary()
+%%          Tail = string()
 %%      error_handler(decode, {error, Decoded, binary()}) -> R
 %%          Decoded = string()
-%%          R = {repeat, binary()} | {continue, string()}
-%%              | {error, Decoded, binary()}
+%%          R = {ok, Replacement, Tail} | {error, Decoded, binary()}
+%%          Replacement = string()
+%%          Tail = binary()
 %% </pre>
 %%
 -module(encodings).
