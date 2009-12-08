@@ -51,14 +51,14 @@
 %% Error handler function:
 %%
 %% <pre>
-%%      error_handler({encode, function()}, {error, Encoded, string()}) -> R
+%%      error_handler(encode, {error, Encoded, string()}) -> R
 %%          Encoded = binary()
-%%          R = binary() | {error, Encoded, string()}
-%%              | {incomplete, Encoded, string()}
-%%      error_handler({decode, function()}, {error, Decoded, binary()}) -> R
+%%          R = {repeat, string()} | {continue, binary()}
+%%              | {error, Encoded, string()}
+%%      error_handler(decode, {error, Decoded, binary()}) -> R
 %%          Decoded = string()
-%%          R = string() | {error, Decoded, binary()}
-%%              | {incomplete, Decoded, binary()}
+%%          R = {repeat, binary()} | {continue, string()}
+%%              | {error, Decoded, binary()}
 %% </pre>
 %%
 -module(encodings).
@@ -105,7 +105,7 @@ behaviour_info(_Other) ->
 %%      Encoded = binary()
 %%      Rest = string()
 %%
-encode(Unicode, Encoding, ErrorHandler) ->
+encode(Unicode, Encoding, ErrorHandler) when is_list(Unicode) ->
     case getencoder(Encoding, ErrorHandler) of
         {ok, Encoder} ->
             Encoder(Unicode);
@@ -128,7 +128,7 @@ encode(Unicode, Encoding) ->
 %%      Decoded = string()
 %%      Rest = binary()
 %%
-decode(String, Encoding, ErrorHandler) ->
+decode(String, Encoding, ErrorHandler) when is_binary(String) ->
     case getdecoder(Encoding, ErrorHandler) of
         {ok, Decoder} ->
             Decoder(String);
@@ -152,7 +152,7 @@ getencoder(Encoding, ErrorHandler) ->
         {ok, Handler} ->
             case gen_server:call(?MODULE, {getencoder, Encoding}) of
                 {ok, Encoder} ->
-                    {ok, decorate_encoder(Encoder, Handler)};
+                    {ok, fun (U) -> encoder(U, Encoder, Handler) end};
                 Result ->
                     Result
             end;
@@ -163,15 +163,19 @@ getencoder(Encoding, ErrorHandler) ->
 getencoder(Encoding) ->
     getencoder(Encoding, strict).
 
-decorate_encoder(Encoder, Handler) ->
-    fun
-        (Unicode) ->
-            case Encoder(Unicode) of
-                {error, _, _}=Error ->
-                    Handler({encode, Encoder}, Error);
-                Result ->
-                    Result
-            end
+encoder(Unicode, Encoder, Handler) when is_list(Unicode) ->
+    case Encoder(Unicode) of
+        {error, _, _}=Error ->
+            case Handler(encode, Error) of
+                {continue, S} ->
+                    S;
+                {reply, U} ->
+                    encoder(U, Encoder, Handler);
+                {error, _, _}=E ->
+                    E
+            end;
+        Result ->
+            Result
     end.
 
 
@@ -187,7 +191,7 @@ getdecoder(Encoding, ErrorHandler) ->
         {ok, Handler} ->
             case gen_server:call(?MODULE, {getdecoder, Encoding}) of
                 {ok, Decoder} ->
-                    {ok, decorate_decoder(Decoder, Handler)};
+                    {ok, fun (S) -> decoder(S, Decoder, Handler) end};
                 Result ->
                     Result
             end;
@@ -198,15 +202,19 @@ getdecoder(Encoding, ErrorHandler) ->
 getdecoder(Encoding) ->
     getdecoder(Encoding, strict).
 
-decorate_decoder(Decoder, Handler) ->
-    fun
-        (String) ->
-            case Decoder(String) of
-                {error, _, _}=Error ->
-                    Handler({decode, Decoder}, Error);
-                Result ->
-                    Result
-            end
+decoder(String, Decoder, Handler) when is_binary(String) ->
+    case Decoder(String) of
+        {error, _, _}=Error ->
+            case Handler(decode, Error) of
+                {continue, U} ->
+                    U;
+                {reply, S} ->
+                    decoder(S, Decoder, Handler);
+                {error, _, _}=E ->
+                    E
+            end;
+        Result ->
+            Result
     end.
 
 

@@ -1,6 +1,8 @@
 General
 -------
 
+- Fix recursion in encoder/decoder decorators
+
 - More encodings
 
 - Add error policies ("strict", "ignore"...)

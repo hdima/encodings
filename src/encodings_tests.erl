@@ -129,6 +129,13 @@ test_registration_override() ->
     ok.
 
 
+test_register_error_handler() ->
+    Handler = fun (_, Error) -> Error end,
+    true = encodings:register_error(myhandler, Handler),
+    {ok, Handler} = encodings:lookup_error(myhandler),
+    ok.
+
+
 %%
 %% Tests
 %%
@@ -174,3 +181,16 @@ normalize_encoding_test_() -> [
     ?_assertEqual("encoding", encodings:normalize_encoding(" encoding -_")),
     ?_assertEqual("encoding_1", encodings:normalize_encoding("encoding - 1"))
     ].
+
+
+error_handler_test_() -> {setup, fun setup/0, fun cleanup/1, [
+    ?_assertEqual(ok, test_register_error_handler()),
+    ?_assertEqual([16#2014],
+        encodings:decode(<<16#97, 16#98, 16#99>>, "1251", ignore)),
+    ?_assertEqual(<<16#97>>,
+        encodings:encode([16#2014, 16#fffd, 16#2122], "1251", ignore))
+    %?_assertEqual([16#2014, 16#2122],
+    %    encodings:decode(<<16#97, 16#98, 16#99>>, "1251", skip)),
+    %?_assertEqual(<<16#97, 16#99>>,
+    %    encodings:encode([16#2014, 16#fffd, 16#2122], "1251", skip))
+    ]}.

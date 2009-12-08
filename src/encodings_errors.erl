@@ -32,12 +32,36 @@
 -vsn("0.1").
 
 %% Public interface
--export([get_builtin_errors/0, strict_handler/2]).
+-export([get_builtin_errors/0, strict_handler/2, ignore_handler/2]).
 
 
-get_builtin_errors() ->
-    [{strict, fun encodings_errors:strict_handler/2}].
+%%
+%% @doc Return builtin error handlers
+%% @spec get_builtin_errors() -> [{atom(), function()}]
+%%
+get_builtin_errors() -> [
+    {strict, fun encodings_errors:strict_handler/2},
+    {ignore, fun encodings_errors:ignore_handler/2},
+    {skip, fun encodings_errors:skip_handler/2}
+    ].
 
 
+%%
+%% @doc Return encoding/decoding error as is
+%%
 strict_handler(_, ErrorInfo) ->
     ErrorInfo.
+
+
+%%
+%% @doc Ignore error and return encoded/decoded head
+%%
+ignore_handler(_, {error, Head, _}) ->
+    {continue, Head}.
+
+
+%%
+%% @doc Skip erroneous characters
+%%
+skip_handler(encode, {error, String, Rest}) ->
+    not_implemented.
