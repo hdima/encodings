@@ -68,7 +68,8 @@
 -behaviour(gen_server).
 
 %% Public interface
--export([encode/2, decode/2, getencoder/1, getdecoder/1,
+-export([encode/2, encode/3, decode/2, decode/3,
+    getencoder/1, getencoder/2, getdecoder/1, getdecoder/2,
     register/1, lookup/1, register_error/2, lookup_error/1,
     start/0, start_link/0, stop/0,
     normalize_encoding/1]).
@@ -95,53 +96,118 @@ behaviour_info(_Other) ->
 
 %%
 %% @doc Encode Unicode to binary string with Encoding
-%% @spec encode(Unicode, Encoding) -> Result
+%% @spec encode(Unicode, Encoding, ErrorHandler) -> Result
 %%      Unicode = string()
+%%      Encoding = string() | atom()
+%%      ErrorHanlder = atom()
 %%      Result = binary() | {error, Encoded, Rest}
 %%          | {incomplete, Encoded, Rest}
 %%      Encoded = binary()
 %%      Rest = string()
 %%
-encode(Unicode, Encoding) ->
-    case getencoder(Encoding) of
+encode(Unicode, Encoding, ErrorHandler) ->
+    case getencoder(Encoding, ErrorHandler) of
         {ok, Encoder} ->
             Encoder(Unicode);
         {error, Reason} ->
             erlang:error(Reason)
     end.
 
+encode(Unicode, Encoding) ->
+    encode(Unicode, Encoding, strict).
+
+
 %%
 %% @doc Decode binary String to Unicode with Encoding
-%% @spec decode(String, Encoding) -> Result
+%% @spec decode(String, Encoding, ErrorHandler) -> Result
 %%      String = binary()
+%%      Encoding = string() | atom()
+%%      ErrorHanlder = atom()
 %%      Result = string() | {error, Decoded, Rest}
 %%          | {incomplete, Decoded, Rest}
 %%      Decoded = string()
 %%      Rest = binary()
 %%
-decode(String, Encoding) ->
-    case getdecoder(Encoding) of
+decode(String, Encoding, ErrorHandler) ->
+    case getdecoder(Encoding, ErrorHandler) of
         {ok, Decoder} ->
             Decoder(String);
         {error, Reason} ->
             erlang:error(Reason)
     end.
 
+decode(String, Encoding) ->
+    decode(String, Encoding, strict).
+
 
 %%
 %% @doc Return encoder
-%% @spec getencoder(Encoding) -> {ok, function()} | {error, badarg}
+%% @spec getencoder(Encoding, ErrorHandler) -> Result
+%%      Encoding = string() | atom()
+%%      ErrorHandler = atom()
+%%      Result = {ok, function()} | {error, badarg}
 %%
+getencoder(Encoding, ErrorHandler) ->
+    case lookup_error(ErrorHandler) of
+        {ok, Handler} ->
+            case gen_server:call(?MODULE, {getencoder, Encoding}) of
+                {ok, Encoder} ->
+                    {ok, decorate_encoder(Encoder, Handler)};
+                Result ->
+                    Result
+            end;
+        Result ->
+            Result
+    end.
+
 getencoder(Encoding) ->
-    gen_server:call(?MODULE, {getencoder, Encoding}).
+    getencoder(Encoding, strict).
+
+decorate_encoder(Encoder, Handler) ->
+    fun
+        (Unicode) ->
+            case Encoder(Unicode) of
+                {error, _, _}=Error ->
+                    Handler({encode, Encoder}, Error);
+                Result ->
+                    Result
+            end
+    end.
 
 
 %%
 %% @doc Return decoder
-%% @spec getdecoder(Encoding) -> {ok, function()} | {error, badarg}
+%% @spec getdecoder(Encoding, ErrorHandler) -> Result
+%%      Encoding = string() | atom()
+%%      ErrorHandler = atom()
+%%      Result = {ok, function()} | {error, badarg}
 %%
+getdecoder(Encoding, ErrorHandler) ->
+    case lookup_error(ErrorHandler) of
+        {ok, Handler} ->
+            case gen_server:call(?MODULE, {getdecoder, Encoding}) of
+                {ok, Decoder} ->
+                    {ok, decorate_decoder(Decoder, Handler)};
+                Result ->
+                    Result
+            end;
+        Result ->
+            Result
+    end.
+
 getdecoder(Encoding) ->
-    gen_server:call(?MODULE, {getdecoder, Encoding}).
+    getdecoder(Encoding, strict).
+
+decorate_decoder(Decoder, Handler) ->
+    fun
+        (String) ->
+            case Decoder(String) of
+                {error, _, _}=Error ->
+                    Handler({decode, Decoder}, Error);
+                Result ->
+                    Result
+            end
+    end.
 
 
 %%
@@ -180,7 +246,9 @@ register_error(Name, Handler) when is_atom(Name), is_function(Handler, 2) ->
 
 %%
 %% @doc Lookup error handler
-%% @spec lookup_error(atom()) -> function()
+%% @spec lookup_error(ErrorHandler) -> Result
+%%      ErrorHandler = atom()
+%%      Result = {ok, function()} | {error, badarg}
 %%
 lookup_error(Name) when is_atom(Name) ->
     gen_server:call(?MODULE, {lookup_error, Name}).
@@ -298,7 +366,7 @@ handle_call({register_error, Name, Handler}, _From, State) ->
 handle_call({lookup_error, Name}, _From, State) ->
     Result = try ets:lookup_element(?MODULE, {error, Name}, 2) of
         Handler ->
-            Handler
+            {ok, Handler}
     catch
         error:badarg ->
             {error, badarg}
