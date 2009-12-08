@@ -249,7 +249,7 @@ init([]) ->
     process_flag(trap_exit, true),
     ets:new(?MODULE, [set, private, named_table]),
     register_builtin_modules(),
-    register_builtin_errors(encoding_errors:get_builtin_errors()),
+    register_builtin_errors(),
     {ok, none}.
 
 terminate(_Reason, _State) ->
@@ -354,6 +354,9 @@ register_encoding(Aliases, Encoder, Decoder) ->
 %%
 %% @doc Register builtin error handlers
 %%
+register_builtin_errors() ->
+    register_builtin_errors(encodings_errors:get_builtin_errors()).
+
 register_builtin_errors([]) ->
     ok;
 register_builtin_errors([{Name, Handler} | Tail]) ->

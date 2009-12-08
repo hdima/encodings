@@ -27,7 +27,7 @@
 %%
 %% @doc Encoding error handlers
 %%
--module(encoding_errors).
+-module(encodings_errors).
 -author("Dmitry Vasiliev <dima@hlabs.spb.ru>").
 -vsn("0.1").
 
@@ -36,7 +36,7 @@
 
 
 get_builtin_errors() ->
-    [{strict, fun encoding_errors:strict_handler/2}].
+    [{strict, fun encodings_errors:strict_handler/2}].
 
 
 strict_handler(_, ErrorInfo) ->
