@@ -85,6 +85,7 @@
 
 
 %%
+%% @private
 %% @doc Behaviour information
 %% @spec behaviour_info(callbacks) -> Callbacks
 %%      Callbacks = [{module(), Arity}]
@@ -321,6 +322,7 @@ normalize_encoding("", Name, _) ->
 
 
 %%
+%% @private
 %% @doc Initialise process
 %%
 init([]) ->
@@ -330,10 +332,12 @@ init([]) ->
     register_builtin_errors(),
     {ok, none}.
 
+%% @private
 terminate(_Reason, _State) ->
     ets:delete(?MODULE),
     ok.
 
+%% @private
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
@@ -342,18 +346,21 @@ code_change(_OldVsn, State, _Extra) ->
 %% Message handling
 %%
 
+%% @private
 handle_cast(stop, State) ->
     {stop, normal, State};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
 
+%% @private
 handle_info({'EXIT', _, shutdown}, State) ->
     {stop, normal, State};
 handle_info(_Info, State) ->
     {noreply, State}.
 
 
+%% @private
 handle_call({Cmd, Encoding}, _From, State)
         when Cmd =:= getencoder; Cmd =:= getdecoder; Cmd =:= lookup ->
     Key = {encoding, normalize_encoding(Encoding)},
